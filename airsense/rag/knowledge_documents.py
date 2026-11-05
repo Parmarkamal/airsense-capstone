@@ -376,3 +376,88 @@ the Good-Satisfactory range (30–70) during these months. Post-monsoon (October
 and winter (December–January) bring moderate pollution due to reduced ventilation and 
 increased vehicle congestion.
 """
+
+# ── Phase 6: verified static fallbacks (used when RAG confidence is low) ──────
+AQI_CATEGORY_STATIC_FALLBACKS: dict[str, str] = {
+    "Good": (
+        "**CPCB Category: Good (AQI 0–50).** Air quality is satisfactory with minimal "
+        "health impact. Outdoor activities including running, cycling, and sports are "
+        "appropriate for the general population (CPCB NAAQS / WHO protective guidance)."
+    ),
+    "Satisfactory": (
+        "**CPCB Category: Satisfactory (AQI 51–100).** Minor breathing discomfort may "
+        "occur for unusually sensitive people. Sensitive individuals should consider "
+        "reducing prolonged outdoor exertion (CPCB NAAQS advisory)."
+    ),
+    "Moderate": (
+        "**CPCB Category: Moderate (AQI 101–200).** Breathing discomfort is likely for "
+        "people with lung disease, asthma, and heart disease. Children, elderly, and "
+        "patients should reduce prolonged outdoor exertion (CPCB NAAQS)."
+    ),
+    "Poor": (
+        "**CPCB Category: Poor (AQI 201–300).** Breathing discomfort affects most people "
+        "on prolonged exposure. Avoid prolonged outdoor activity; wear a well-fitted "
+        "N95/FFP2 mask if outdoors; sensitive groups should prefer indoor environments "
+        "(CPCB NAAQS / GRAP Stage 1 guidance)."
+    ),
+    "Very Poor": (
+        "**CPCB Category: Very Poor (AQI 301–400).** Respiratory illness risk rises on "
+        "prolonged exposure. Avoid outdoor activities; people with existing disease "
+        "should remain indoors (CPCB NAAQS / GRAP Stage 2 guidance)."
+    ),
+    "Severe": (
+        "**CPCB Category: Severe (AQI 401+).** Affects healthy people and seriously "
+        "impacts those with existing disease. Restrict outdoor activity; follow local "
+        "GRAP emergency measures where applicable (CPCB NAAQS)."
+    ),
+    "No Data": (
+        "Live AQI for this city is currently unavailable. As a general precaution, "
+        "sensitive groups (children, elderly, asthma/COPD, heart disease) should limit "
+        "prolonged outdoor exertion until a verified reading is available "
+        "(WHO 2021 / CPCB NAAQS protective principle)."
+    ),
+}
+
+
+def get_static_fallback_for_aqi(
+    aqi_value: float | None = None,
+    city: str = "",
+    category_label: str | None = None,
+) -> str:
+    """
+    Return a verified CPCB/WHO-aligned static advisory when RAG confidence is low.
+    Does not invent statistics — uses fixed category text from this module.
+    """
+    label = category_label
+    if label is None:
+        if aqi_value is None:
+            label = "No Data"
+        else:
+            val = float(aqi_value)
+            if val <= 50:
+                label = "Good"
+            elif val <= 100:
+                label = "Satisfactory"
+            elif val <= 200:
+                label = "Moderate"
+            elif val <= 300:
+                label = "Poor"
+            elif val <= 400:
+                label = "Very Poor"
+            else:
+                label = "Severe"
+
+    body = AQI_CATEGORY_STATIC_FALLBACKS.get(
+        label, AQI_CATEGORY_STATIC_FALLBACKS["No Data"]
+    )
+    city_prefix = f"For **{city}**: " if city else ""
+    aqi_prefix = (
+        f"Current observed AQI ≈ **{float(aqi_value):.0f}**. "
+        if aqi_value is not None
+        else ""
+    )
+    return (
+        "ℹ️ *Low retrieval confidence — showing verified CPCB/WHO category guidance "
+        "instead of free-form AI extrapolation.*\n\n"
+        f"{city_prefix}{aqi_prefix}{body}"
+    )

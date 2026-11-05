@@ -1,12 +1,13 @@
 """
 AirSense — AI Health Advisor Dashboard View
 File: dashboard/components/ai_advisor_view.py
-Phase: 4 (Week 7)
+Phase: 4 + 6
 
 Renders View 5 — the AI Health Advisor chat interface:
+  - Phase 6 persona quick-pills (runner / parent / asthma / commuter)
   - Suggested quick questions for non-technical users
   - Real-time AQI context injection into the RAG prompt
-  - Streaming chat conversation history
+  - Domain-guarded chat with mandatory medical disclaimer
   - Source citation display (which WHO/CPCB docs were used)
   - Ollama status indicator
 """
@@ -22,6 +23,8 @@ if str(PROJECT_ROOT) not in sys.path:
 
 import streamlit as st
 import pandas as pd
+
+from dashboard.components.chat_view import render_persona_pills, resolve_default_city
 
 
 # ── Quick-Start Suggestion Prompts ────────────────────────────────────────────
@@ -137,6 +140,32 @@ def render_ai_advisor_view(df_latest: pd.DataFrame | None = None) -> None:
     # ── Initialize Chat History in Session State ───────────────────────────────
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = []
+
+    # ── City context for persona pills ─────────────────────────────────────────
+    city_options: list[str] = []
+    if df_latest is not None and not df_latest.empty and "city_display_name" in df_latest.columns:
+        city_options = df_latest["city_display_name"].dropna().astype(str).tolist()
+    default_city = resolve_default_city(df_latest)
+    if city_options:
+        selected_city = st.selectbox(
+            "City context for persona questions:",
+            options=city_options,
+            index=0,
+            key="advisor_persona_city",
+        )
+    else:
+        selected_city = default_city
+
+    selected_aqi: float | None = None
+    if df_latest is not None and not df_latest.empty and "city_display_name" in df_latest.columns:
+        match = df_latest[df_latest["city_display_name"] == selected_city]
+        if not match.empty and pd.notna(match.iloc[0].get("aqi")):
+            selected_aqi = float(match.iloc[0]["aqi"])
+
+    # Phase 6.4 — Persona quick-pills
+    render_persona_pills(df_latest=df_latest, city=selected_city)
+
+    st.markdown("---")
     
     # ── Suggested Quick-Start Questions ───────────────────────────────────────
     st.markdown("#### 💡 Quick Questions — Click to Ask Instantly")
@@ -174,34 +203,45 @@ def render_ai_advisor_view(df_latest: pd.DataFrame | None = None) -> None:
         st.rerun()
     
     if ask_button and user_input.strip():
-        if not kb_ok:
-            st.warning("⚠️ Knowledge base not ready. Run `python rag/build_knowledge_base.py` first.")
-        else:
-            live_context = _format_live_aqi_context(df_latest)
-            
-            spinner_msg = (
-                "🧠 Generating personalized health advice via Ollama LLM..."
-                if ollama_ok else
-                "🔍 Retrieving direct WHO/CPCB guidelines from ChromaDB (Offline Mode)..."
+        live_context = _format_live_aqi_context(df_latest)
+
+        # Domain-refused / static-fallback answers do not require KB or Ollama
+        spinner_msg = (
+            "🧠 Applying safety guardrails + generating grounded health advice..."
+            if ollama_ok else
+            "🔍 Retrieving WHO/CPCB guidelines (guarded mode)..."
+        )
+        with st.spinner(spinner_msg):
+            result = ask_health_advisor(
+                question=user_input.strip(),
+                live_aqi_context=live_context,
+                current_aqi=selected_aqi,
+                city=selected_city,
             )
-            with st.spinner(spinner_msg):
-                result = ask_health_advisor(
-                    question=user_input.strip(),
-                    live_aqi_context=live_context,
-                )
-            
-            # Add to chat history
-            st.session_state.chat_history.append({
-                "role": "user",
-                "content": user_input.strip(),
-            })
-            st.session_state.chat_history.append({
-                "role": "assistant",
-                "content": result["answer"],
-                "sources": result["sources"],
-                "model": result["model_used"],
-                "chunks": result["chunks_retrieved"],
-            })
+
+        if result.get("refused"):
+            st.info("🛡️ Out-of-domain request blocked — no LLM call was made.")
+        elif result.get("low_confidence"):
+            st.warning(
+                "📉 Low RAG confidence — returned verified CPCB/WHO static guidance "
+                "instead of free-form generation."
+            )
+        elif not kb_ok and not result.get("refused"):
+            st.caption("Tip: run `python rag/build_knowledge_base.py` for fuller RAG answers.")
+
+        st.session_state.chat_history.append({
+            "role": "user",
+            "content": user_input.strip(),
+        })
+        st.session_state.chat_history.append({
+            "role": "assistant",
+            "content": result["answer"],
+            "sources": result["sources"],
+            "model": result["model_used"],
+            "chunks": result["chunks_retrieved"],
+            "refused": result.get("refused", False),
+            "low_confidence": result.get("low_confidence", False),
+        })
     
     # ── Display Chat History ───────────────────────────────────────────────────
     if st.session_state.chat_history:

@@ -40,3 +40,4 @@ Elevate the LightGBM forecasting engine from a simple regressor to a fully defen
 - [ ] Benchmark comparison card shows LightGBM beating naive baselines.
 - [ ] Feature importance plot displays top predictive drivers.
 - [ ] All tests pass: `python -m pytest tests/test_forecast.py`.
+

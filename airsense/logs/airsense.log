@@ -61,3 +61,22 @@
 2026-10-29 08:28:00 | WARNING | airsense.consumer | Kafka not available (attempt 11/12): NoBrokersAvailable — retrying in 10s
 2026-10-29 08:28:12 | WARNING | airsense.consumer | Kafka not available (attempt 12/12): NoBrokersAvailable — retrying in 10s
 2026-10-29 08:28:12 | ERROR | airsense.consumer | Cannot reach Kafka broker. Is ZooKeeper + Kafka running?
+2026-11-05 11:31:41 | WARNING | airsense.fetch | WAQI timestamp stale for ahmedabad (time=2026-06-23T10:00:00+05:30, >2h) — switching to Open-Meteo
+2026-11-05 11:31:42 | INFO | airsense.fetch | Fetched Ahmedabad (ahmedabad) AQI=100.0 source=Open-Meteo-Live time=2026-11-05T06:00:00+00:00
+2026-11-05 11:31:44 | WARNING | airsense.fetch | WAQI timestamp stale for bengaluru (time=2026-06-23T10:00:00+05:30, >2h) — switching to Open-Meteo
+2026-11-05 11:31:44 | INFO | airsense.fetch | Fetched Bengaluru (bengaluru) AQI=73.0 source=Open-Meteo-Live time=2026-11-05T06:00:00+00:00
+2026-11-05 11:31:45 | WARNING | airsense.fetch | WAQI timestamp stale for pune (time=2021-11-15T06:00:00+05:30, >2h) — switching to Open-Meteo
+2026-11-05 11:31:45 | INFO | airsense.fetch | Fetched Pune (pune) AQI=90.0 source=Open-Meteo-Live time=2026-11-05T06:00:00+00:00
+2026-11-05 11:31:47 | WARNING | airsense.fetch | WAQI timestamp stale for gandhinagar (time=2026-06-23T10:00:00+05:30, >2h) — switching to Open-Meteo
+2026-11-05 11:31:47 | INFO | airsense.fetch | Fetched Gandhinagar (gandhinagar) AQI=88.0 source=Open-Meteo-Live time=2026-11-05T06:00:00+00:00
+2026-11-05 11:31:48 | INFO | airsense.fetch | Fetched Delhi (delhi) AQI=396.0 source=WAQI time=2026-11-05T11:00:00+05:30
+2026-11-05 11:31:50 | WARNING | airsense.fetch | WAQI timestamp stale for mumbai (time=2025-03-04T06:00:00+05:30, >2h) — switching to Open-Meteo
+2026-11-05 11:31:50 | INFO | airsense.fetch | Fetched Mumbai (mumbai) AQI=153.0 source=Open-Meteo-Live time=2026-11-05T06:00:00+00:00
+2026-11-05 11:31:50 | INFO | airsense.fetch | VERIFY ahmedabad | source=Open-Meteo-Live | time=2026-11-05T06:00:00+00:00 | same_day=True | aqi=100.0
+2026-11-05 11:31:50 | INFO | airsense.fetch | VERIFY bengaluru | source=Open-Meteo-Live | time=2026-11-05T06:00:00+00:00 | same_day=True | aqi=73.0
+2026-11-05 11:31:50 | INFO | airsense.fetch | VERIFY pune | source=Open-Meteo-Live | time=2026-11-05T06:00:00+00:00 | same_day=True | aqi=90.0
+2026-11-05 11:31:50 | INFO | airsense.fetch | VERIFY gandhinagar | source=Open-Meteo-Live | time=2026-11-05T06:00:00+00:00 | same_day=True | aqi=88.0
+2026-11-05 11:31:50 | INFO | airsense.fetch | VERIFY delhi | source=WAQI | time=2026-11-05T11:00:00+05:30 | same_day=True | aqi=396.0
+2026-11-05 11:31:50 | INFO | airsense.fetch | VERIFY mumbai | source=Open-Meteo-Live | time=2026-11-05T06:00:00+00:00 | same_day=True | aqi=153.0
+2026-11-05 11:31:50 | INFO | airsense.fetch | Freshness summary: 6/6 cities have current-day timestamps
+2026-11-05 11:31:52 | ERROR | airsense.fetch | Cannot connect to Kafka at localhost:9092: NoBrokersAvailable

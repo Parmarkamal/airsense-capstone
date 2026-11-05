@@ -37,3 +37,4 @@ Transform the GenAI Health Advisor into a safe, grounded, defensible medical int
 - [ ] Every valid response includes the medical disclaimer.
 - [ ] Persona buttons auto-populate chat input and return grounded answers.
 - [ ] All tests pass: `python -m pytest tests/test_rag.py`.
+

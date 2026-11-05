@@ -33,3 +33,4 @@ Fulfill M.Sc. IT (Business Intelligence & Analytics) requirements by implementin
 - [ ] New "Analytics & BI" tab active in Streamlit dashboard.
 - [ ] `export_powerbi_data.py` generates clean dimension and fact CSVs.
 - [ ] `docs/powerbi_setup.md` contains complete star schema and DAX documentation.
+

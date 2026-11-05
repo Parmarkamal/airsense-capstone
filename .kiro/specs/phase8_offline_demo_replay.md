@@ -33,3 +33,4 @@ Ensure the AirSense platform can be 100% reliably demonstrated during academic v
 - [ ] Running `fetch_aqi_replay.py` populates database without internet.
 - [ ] Dashboard displays amber REPLAY badge.
 - [ ] All 32 existing tests pass.
+
