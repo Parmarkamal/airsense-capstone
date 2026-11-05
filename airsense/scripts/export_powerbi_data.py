@@ -175,6 +175,27 @@ def build_fact_aqi_readings(
     # Assign surrogate ReadingID
     df["ReadingID"] = range(1, len(df) + 1)
 
+    # Ensure CPCB and provenance columns always exist with clean fallbacks
+    if "cpcb_aqi" not in df.columns:
+        df["cpcb_aqi"] = df["aqi"]
+    else:
+        df["cpcb_aqi"] = df["cpcb_aqi"].fillna(df["aqi"])
+
+    if "prominent_pollutant" not in df.columns:
+        df["prominent_pollutant"] = "PM2.5"
+    else:
+        df["prominent_pollutant"] = df["prominent_pollutant"].fillna("PM2.5")
+
+    if "source_type" not in df.columns:
+        df["source_type"] = "ground_station"
+    else:
+        df["source_type"] = df["source_type"].fillna("ground_station")
+
+    if "station_operator" not in df.columns:
+        df["station_operator"] = "CPCB / SPCB"
+    else:
+        df["station_operator"] = df["station_operator"].fillna("CPCB / SPCB")
+
     fact_cols = [
         "ReadingID",
         "DateKey",

@@ -45,17 +45,26 @@ def _format_live_aqi_context(df_latest: pd.DataFrame) -> str:
     if df_latest is None or df_latest.empty:
         return "No live data available."
     
+    from dashboard.components.gauges import get_aqi_category
+
     lines = []
     for _, row in df_latest.iterrows():
         city = row.get("city_display_name", row.get("city", "Unknown"))
-        aqi = row.get("aqi")
+        cpcb = row.get("cpcb_aqi")
+        eff_aqi = cpcb if (pd.notna(cpcb) and cpcb is not None) else row.get("aqi")
         pm25 = row.get("pm25")
         pm10 = row.get("pm10")
+        prom = row.get("prominent_pollutant") or "PM2.5"
         
-        line = f"- {city}: AQI = {aqi:.0f}" if aqi else f"- {city}: AQI = N/A"
-        if pm25:
+        if pd.notna(eff_aqi) and eff_aqi is not None:
+            cat_name = get_aqi_category(eff_aqi)["label"]
+            line = f"- {city}: AQI = {eff_aqi:.0f} (Category: {cat_name}, Dominant: {prom})"
+        else:
+            line = f"- {city}: AQI = N/A"
+
+        if pm25 and pd.notna(pm25):
             line += f", PM2.5 = {pm25:.1f} µg/m³"
-        if pm10:
+        if pm10 and pd.notna(pm10):
             line += f", PM10 = {pm10:.1f} µg/m³"
         lines.append(line)
     

@@ -318,6 +318,7 @@ def create_producer(settings: dict[str, Any]) -> KafkaProducer:
         bootstrap_servers=kafka_cfg["bootstrap_servers"],
         acks=kafka_cfg.get("producer_acks", "all"),
         request_timeout_ms=kafka_cfg.get("request_timeout_ms", 30000),
+        api_version=(2, 0, 2),
         value_serializer=lambda value: json.dumps(value, default=str).encode("utf-8"),
         key_serializer=lambda key: key.encode("utf-8") if key else None,
     )
@@ -487,8 +488,35 @@ def run_fetch() -> int:
             )
 
     if producer is not None:
-        success, publish_failed = publish_readings(producer, topic, readings, log)
-        producer.close()
+        try:
+            success, publish_failed = publish_readings(producer, topic, readings, log)
+        except Exception as exc:
+            log.warning("Kafka publish error: %s — falling back to direct DB", exc)
+            success, publish_failed = 0, len(readings)
+        finally:
+            try:
+                producer.close()
+            except Exception:
+                pass
+
+        if success == 0 and publish_failed > 0:
+            log.warning("Kafka publish resulted in 0 successes — falling back to direct DB insertion...")
+            success, publish_failed = insert_direct_to_db(readings, settings, log)
+        else:
+            # Record heartbeat on successful Kafka publish
+            heartbeat_path = PROJECT_ROOT / "logs" / "heartbeat.json"
+            try:
+                heartbeat_path.parent.mkdir(parents=True, exist_ok=True)
+                heartbeat_path.write_text(
+                    json.dumps({
+                        "last_success": datetime.now(timezone.utc).isoformat(),
+                        "batch_size": success,
+                        "source": "Kafka-Live",
+                    }),
+                    encoding="utf-8",
+                )
+            except Exception:
+                pass
     else:
         success, publish_failed = insert_direct_to_db(readings, settings, log)
 

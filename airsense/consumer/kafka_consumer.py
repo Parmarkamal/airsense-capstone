@@ -66,6 +66,7 @@ def create_consumer(settings: dict[str, Any]) -> KafkaConsumer:
         kafka_cfg["topic_raw"],
         bootstrap_servers=kafka_cfg["bootstrap_servers"],
         group_id=kafka_cfg.get("group_id", "airsense_consumer"),
+        api_version=(2, 0, 2),
         auto_offset_reset="earliest",       # catch up on missed messages after restart
         enable_auto_commit=False,           # we commit manually after successful DB insert
         max_poll_records=MAX_POLL_RECORDS,

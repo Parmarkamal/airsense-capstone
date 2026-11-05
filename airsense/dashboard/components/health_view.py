@@ -196,7 +196,7 @@ def check_ollama(
 
 def check_ingestion_heartbeat(
     heartbeat_path: Path | None = None,
-    stale_threshold_minutes: int = 30,
+    stale_threshold_minutes: int = 65,
 ) -> HealthStatus:
     """
     Read the ingestion heartbeat file and report time since last successful batch.

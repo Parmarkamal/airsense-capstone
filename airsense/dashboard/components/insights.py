@@ -26,20 +26,26 @@ def render_city_ranking_chart(df_latest: pd.DataFrame) -> go.Figure:
         fig.add_annotation(text="No city data available", showarrow=False)
         return fig
 
-    # Sort cities by AQI ascending (Cleanest at top)
-    df_sorted = df_latest.dropna(subset=["aqi"]).sort_values("aqi", ascending=True)
+    # Sort cities by effective CPCB AQI ascending (Cleanest at top)
+    df_sorted = df_latest.copy()
+    if "cpcb_aqi" in df_sorted.columns:
+        df_sorted["effective_aqi"] = df_sorted["cpcb_aqi"].fillna(df_sorted["aqi"])
+    else:
+        df_sorted["effective_aqi"] = df_sorted["aqi"]
 
-    colors = [get_aqi_category(val)["color"] for val in df_sorted["aqi"]]
-    categories = [get_aqi_category(val)["label"] for val in df_sorted["aqi"]]
-    max_val = df_sorted["aqi"].max() if not df_sorted.empty else 300
+    df_sorted = df_sorted.dropna(subset=["effective_aqi"]).sort_values("effective_aqi", ascending=True)
+
+    colors = [get_aqi_category(val)["color"] for val in df_sorted["effective_aqi"]]
+    categories = [get_aqi_category(val)["label"] for val in df_sorted["effective_aqi"]]
+    max_val = df_sorted["effective_aqi"].max() if not df_sorted.empty else 300
 
     fig = go.Figure(
         go.Bar(
-            x=df_sorted["aqi"],
+            x=df_sorted["effective_aqi"],
             y=df_sorted["city_display_name"],
             orientation="h",
             marker=dict(color=colors, cornerradius=6),
-            text=[f" <b>{val:.0f}</b> ({cat})" for val, cat in zip(df_sorted["aqi"], categories)],
+            text=[f" <b>{val:.0f}</b> ({cat})" for val, cat in zip(df_sorted["effective_aqi"], categories)],
             textposition="outside",
             cliponaxis=False,
             textfont=dict(color="#1E293B", size=12, family="Inter, system-ui, sans-serif"),
@@ -386,7 +392,8 @@ def render_city_ranking_matrix(
     for _, city_row in df_latest.iterrows():
         city = city_row.get("city", "")
         city_name = city_row.get("city_display_name", city)
-        current_aqi = city_row.get("aqi")
+        cpcb = city_row.get("cpcb_aqi")
+        current_aqi = cpcb if (pd.notna(cpcb) and cpcb is not None) else city_row.get("aqi")
         category = get_aqi_category(current_aqi)["label"] if pd.notna(current_aqi) else "N/A"
 
         # Peak daily AQI from history
@@ -450,13 +457,19 @@ def render_executive_scorecard(
     if df_latest.empty:
         return []
 
-    valid_aqi = df_latest.dropna(subset=["aqi"])
+    valid_aqi = df_latest.copy()
+    if "cpcb_aqi" in valid_aqi.columns:
+        valid_aqi["effective_aqi"] = valid_aqi["cpcb_aqi"].fillna(valid_aqi["aqi"])
+    else:
+        valid_aqi["effective_aqi"] = valid_aqi["aqi"]
+
+    valid_aqi = valid_aqi.dropna(subset=["effective_aqi"])
     if valid_aqi.empty:
         return []
 
-    fleet_avg = round(float(valid_aqi["aqi"].mean()), 0)
-    most_polluted = valid_aqi.loc[valid_aqi["aqi"].idxmax()]
-    cleanest = valid_aqi.loc[valid_aqi["aqi"].idxmin()]
+    fleet_avg = round(float(valid_aqi["effective_aqi"].mean()), 0)
+    most_polluted = valid_aqi.loc[valid_aqi["effective_aqi"].idxmax()]
+    cleanest = valid_aqi.loc[valid_aqi["effective_aqi"].idxmin()]
 
     # Combustion ratio average
     ratio_vals = []
@@ -484,13 +497,13 @@ def render_executive_scorecard(
         {
             "label": "Most Polluted",
             "value": f"{most_polluted.get('city_display_name', most_polluted.get('city', 'Unknown')).title()}",
-            "delta": f"{most_polluted['aqi']:.0f} AQI",
+            "delta": f"{most_polluted['effective_aqi']:.0f} AQI",
             "help": "City with highest current AQI",
         },
         {
             "label": "Cleanest City",
             "value": f"{cleanest.get('city_display_name', cleanest.get('city', 'Unknown')).title()}",
-            "delta": f"{cleanest['aqi']:.0f} AQI",
+            "delta": f"{cleanest['effective_aqi']:.0f} AQI",
             "help": "City with lowest current AQI",
         },
         {

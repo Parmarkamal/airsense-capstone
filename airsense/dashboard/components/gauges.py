@@ -140,8 +140,8 @@ def render_aqi_gauge(city_name: str, aqi_val: float | None) -> go.Figure:
     )
 
     fig.update_layout(
-        height=260,
-        margin=dict(l=25, r=25, t=50, b=10),
+        height=205,
+        margin=dict(l=15, r=15, t=35, b=5),
         paper_bgcolor="rgba(0,0,0,0)",
         font={"family": "Inter, system-ui, sans-serif"},
     )
@@ -197,13 +197,13 @@ def render_pollutants_bar(row: pd.Series) -> go.Figure:
     )
 
     fig.update_layout(
-        height=260,
-        margin=dict(l=10, r=20, t=25, b=10),
+        height=205,
+        margin=dict(l=10, r=20, t=15, b=5),
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(248, 250, 252, 0.6)",
         xaxis=dict(title="", showgrid=True, gridcolor="#E2E8F0"),
         yaxis=dict(title="", automargin=True),
-        font={"family": "Inter, system-ui, sans-serif", "size": 12},
+        font={"family": "Inter, system-ui, sans-serif", "size": 11},
     )
     return fig
 
@@ -217,7 +217,7 @@ def render_history_trend(history_df: pd.DataFrame, city_name: str) -> go.Figure:
             showarrow=False,
             font=dict(size=14, color="#64748B"),
         )
-        fig.update_layout(height=320, paper_bgcolor="rgba(0,0,0,0)")
+        fig.update_layout(height=270, paper_bgcolor="rgba(0,0,0,0)")
         return fig
 
     fig = go.Figure()
@@ -229,8 +229,8 @@ def render_history_trend(history_df: pd.DataFrame, city_name: str) -> go.Figure:
             y=history_df["aqi"],
             mode="lines+markers",
             name="AQI",
-            line=dict(color="#3B82F6", width=3, shape="spline"),
-            marker=dict(size=7, color="#1D4ED8", symbol="circle"),
+            line=dict(color="#3B82F6", width=2.5, shape="spline"),
+            marker=dict(size=6, color="#1D4ED8", symbol="circle"),
             fill="tozeroy",
             fillcolor="rgba(59, 130, 246, 0.08)",
             hovertemplate="<b>%{x|%b %d, %H:%M}</b><br>AQI: <b>%{y:.1f}</b><extra></extra>",
@@ -245,7 +245,7 @@ def render_history_trend(history_df: pd.DataFrame, city_name: str) -> go.Figure:
                 y=history_df["pm25"],
                 mode="lines",
                 name="PM2.5 (µg/m³)",
-                line=dict(color="#EF4444", width=2, dash="dot"),
+                line=dict(color="#EF4444", width=1.5, dash="dot"),
                 hovertemplate="PM2.5: <b>%{y:.1f} µg/m³</b><extra></extra>",
             )
         )
@@ -258,10 +258,10 @@ def render_history_trend(history_df: pd.DataFrame, city_name: str) -> go.Figure:
     fig.update_layout(
         title=dict(
             text=f"<b>24-Hour Air Quality Profile — {city_name}</b>",
-            font=dict(size=16, color="#1E293B"),
+            font=dict(size=14, color="#1E293B"),
         ),
-        height=340,
-        margin=dict(l=20, r=20, t=45, b=20),
+        height=270,
+        margin=dict(l=15, r=15, t=35, b=15),
         hovermode="x unified",
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(248, 250, 252, 0.6)",

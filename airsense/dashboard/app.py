@@ -93,70 +93,77 @@ st.markdown("""
     html, body, [class*="css"] {
         font-family: 'Inter', system-ui, sans-serif;
     }
+
+    .block-container {
+        padding-top: 1.2rem !important;
+        padding-bottom: 1.5rem !important;
+        max-width: 98% !important;
+    }
     
     .main-header {
         background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
         color: #F8FAFC;
-        padding: 24px 32px;
-        border-radius: 14px;
-        margin-bottom: 20px;
-        box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.25);
+        padding: 12px 20px;
+        border-radius: 10px;
+        margin-bottom: 8px;
+        box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.2);
     }
     
     .disclaimer-banner {
         background-color: #FEF3C7;
         border-left: 4px solid #F59E0B;
         color: #92400E;
-        padding: 12px 18px;
-        border-radius: 8px;
-        font-size: 13px;
-        margin-bottom: 20px;
+        padding: 6px 14px;
+        border-radius: 6px;
+        font-size: 11.5px;
+        margin-bottom: 8px;
+        line-height: 1.35;
     }
 
     .replay-banner {
         background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
         border: 2px solid #F59E0B;
         color: #78350F;
-        padding: 14px 22px;
-        border-radius: 10px;
-        font-size: 14px;
-        margin-bottom: 20px;
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-size: 12px;
+        margin-bottom: 8px;
         font-weight: 600;
         text-align: center;
-        box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+        box-shadow: 0 2px 6px rgba(245, 158, 11, 0.2);
     }
 
     .kpi-card {
         background-color: #FFFFFF;
         border: 1px solid #E2E8F0;
-        border-radius: 12px;
-        padding: 16px;
+        border-radius: 10px;
+        padding: 8px 4px;
         text-align: center;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
         transition: transform 0.15s ease, box-shadow 0.15s ease;
     }
     .kpi-card:hover {
         transform: translateY(-2px);
-        box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
     }
     
     .badge {
         display: inline-block;
-        padding: 4px 10px;
+        padding: 2px 7px;
         border-radius: 9999px;
-        font-size: 11px;
+        font-size: 9.5px;
         font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 0.05em;
+        letter-spacing: 0.04em;
     }
 
     .anomaly-card {
         background-color: #FFF1F2;
         border-left: 4px solid #E11D48;
-        padding: 12px 16px;
-        border-radius: 8px;
-        margin-bottom: 10px;
-        font-size: 13px;
+        padding: 8px 12px;
+        border-radius: 6px;
+        margin-bottom: 8px;
+        font-size: 12px;
         color: #881337;
     }
 </style>
@@ -238,10 +245,10 @@ def main():
     # ── Main Header ────────────────────────────────────────────────────────────
     st.markdown("""
     <div class="main-header">
-        <h1 style="margin:0; font-size: 28px; font-weight:800; letter-spacing: -0.02em;">
+        <h2 style="margin:0; font-size: 22px; font-weight:800; letter-spacing: -0.02em;">
             🌬️ AirSense — Real-Time Environmental Intelligence
-        </h1>
-        <p style="margin:6px 0 0 0; color: #94A3B8; font-size: 14px;">
+        </h2>
+        <p style="margin:3px 0 0 0; color: #94A3B8; font-size: 12.5px;">
             MSc Business Intelligence & Analytics Capstone • Live Kafka Streaming & TimescaleDB Engine
         </p>
     </div>
@@ -251,8 +258,7 @@ def main():
     st.markdown("""
     <div class="disclaimer-banner">
         ⚠️ <b>Health Advisory Notice:</b> Air quality index readings and health guidelines are derived from official 
-        CPCB NAAQS and WHO guidelines for educational and analytical purposes. This platform does not provide medical 
-        diagnoses. Individuals with respiratory or cardiovascular conditions should consult healthcare professionals.
+        CPCB NAAQS and WHO guidelines for educational and analytical purposes. This platform does not provide medical diagnoses.
     </div>
     """, unsafe_allow_html=True)
 
@@ -276,7 +282,7 @@ def main():
     # VIEW 1: LIVE TELEMETRY
     # ═══════════════════════════════════════════════════════════════════════════
     if selected_view == "🏠 Live Telemetry":
-        st.subheader("🏙️ Monitored Urban Hubs — Current Status")
+        st.markdown("<h4 style='margin-top:0; margin-bottom:8px;'>🏙️ Monitored Urban Hubs — Current Status</h4>", unsafe_allow_html=True)
         
         city_names = df_latest["city_display_name"].tolist()
         city_slugs = df_latest["city"].tolist()
@@ -290,38 +296,31 @@ def main():
             freshness_label = row.get("freshness_label", "🟢 Live (<1h old)")
             freshness_color = row.get("freshness_color", "green")
             age_hours = row.get("data_age_hours")
-            age_text = (
-                f"{float(age_hours):.1f}h"
-                if age_hours is not None and pd.notna(age_hours) and age_hours != float("inf")
-                else "n/a"
-            )
             prov = get_provenance_badge(row)
             prom = row.get("prominent_pollutant") or "PM2.5"
             with cols[idx]:
                 st.markdown(f"""
                 <div class="kpi-card" style="border-top: 3px solid {prov.get('border_color', '#3B82F6')};">
-                    <div style="font-weight:700; font-size:14px; color:#1E293B; margin-bottom:2px;">
+                    <div style="font-weight:700; font-size:13px; color:#1E293B; margin-bottom:1px;">
                         {row['city_display_name']}
                     </div>
-                    <div style="font-size:28px; font-weight:800; color:{category['color']}; margin:2px 0;">
+                    <div style="font-size:26px; font-weight:800; color:{category['color']}; margin:1px 0;">
                         {int(display_aqi) if pd.notna(display_aqi) else '--'}
                     </div>
                     <span class="badge" style="background-color:{category['bg_color']}; color:{category['text_color']};">
                         {category['label']}
                     </span>
-                    <div style="margin-top:6px; font-size:11px; font-weight:600; color:#475569;">
+                    <div style="margin-top:4px; font-size:10px; font-weight:600; color:#475569;">
                         Key: <b>{prom}</b>
                     </div>
-                    <div style="margin-top:4px; font-size:11px; font-weight:600; color:{freshness_color};">
+                    <div style="margin-top:2px; font-size:9.5px; font-weight:600; color:{freshness_color};">
                         {freshness_label}
                     </div>
-                    <div style="margin-top:3px; font-size:9.5px; color:#64748B; line-height:1.2;">
+                    <div style="margin-top:2px; font-size:8.5px; color:#64748B; line-height:1.1;">
                         {prov['badge']}
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
-
-        st.markdown("<br>", unsafe_allow_html=True)
 
         # Deep-dive city selector
         col_sel, col_space = st.columns([1, 2])
@@ -340,13 +339,13 @@ def main():
         rolling_aqi_str = f"<b>{rolling_cpcb['aqi']}</b> ({rolling_cpcb['category']})" if rolling_cpcb.get("aqi") else "Averaging..."
         prom_str = rolling_cpcb.get("prominent_pollutant") or city_data.get("prominent_pollutant") or "PM2.5"
         st.markdown(f"""
-        <div style="background:#F1F5F9; border-radius:10px; padding:12px 18px; margin-bottom:16px; border:1px solid #CBD5E1; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;">
+        <div style="background:#1E293B; border-radius:8px; padding:8px 14px; margin-bottom:8px; border:1px solid #334155; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; font-size:12px; color:#F8FAFC;">
             <div>
-                🏛️ <b>Official CPCB NAQI 24h Rolling Standard:</b> {rolling_aqi_str} 
-                &nbsp;|&nbsp; Prominent: <span style="background:#E2E8F0; padding:2px 6px; border-radius:4px; font-weight:600;">{prom_str}</span>
-                <span style="font-size:12px; color:#64748B; margin-left:8px;">(Data Completeness: {rolling_cpcb.get('valid_hours', 24)}/24h)</span>
+                🏛️ <b style="color:#F8FAFC;">Official CPCB NAQI 24h Rolling Standard:</b> <span style="color:#38BDF8;">{rolling_aqi_str}</span> 
+                &nbsp;|&nbsp; Prominent: <span style="background:#334155; color:#F8FAFC; padding:2px 6px; border-radius:4px; font-weight:600;">{prom_str}</span>
+                <span style="font-size:11px; color:#94A3B8; margin-left:6px;">(Completeness: {rolling_cpcb.get('valid_hours', 24)}/24h)</span>
             </div>
-            <div style="font-size:12px; color:#334155;">
+            <div style="font-size:11px; color:#CBD5E1;">
                 {prov_info['badge']}
             </div>
         </div>
@@ -356,7 +355,7 @@ def main():
         c_left, c_right = st.columns([1, 1])
 
         with c_left:
-            st.markdown(f"#### 🎯 1-Hour Indicative AQI Gauge: {selected_display}")
+            st.markdown(f"<h5 style='margin-bottom:2px;'>🎯 1-Hour Indicative AQI Gauge: {selected_display}</h5>", unsafe_allow_html=True)
             disp_gauge_aqi = city_data.get("cpcb_aqi") if pd.notna(city_data.get("cpcb_aqi")) else city_data["aqi"]
             gauge_fig = render_aqi_gauge(selected_display, disp_gauge_aqi)
             st.plotly_chart(gauge_fig, use_container_width=True, config={"displayModeBar": False})
@@ -364,25 +363,25 @@ def main():
             # Health recommendation card
             cat_obj = get_aqi_category(disp_gauge_aqi)
             st.markdown(f"""
-            <div style="background-color:{cat_obj['bg_color']}; border-left: 5px solid {cat_obj['color']}; padding: 14px 18px; border-radius: 8px;">
-                <div style="font-weight:700; color:{cat_obj['text_color']}; font-size:14px; margin-bottom:4px;">
+            <div style="background-color:{cat_obj['bg_color']}; border-left: 4px solid {cat_obj['color']}; padding: 8px 12px; border-radius: 6px; margin-top: 4px;">
+                <div style="font-weight:700; color:{cat_obj['text_color']}; font-size:12px; margin-bottom:2px;">
                     Health Advisory — {cat_obj['label']} Air Quality
                 </div>
-                <div style="color:{cat_obj['text_color']}; font-size:13px; line-height:1.5;">
+                <div style="color:{cat_obj['text_color']}; font-size:11.5px; line-height:1.4;">
                     {cat_obj['advisory']}
                 </div>
             </div>
             """, unsafe_allow_html=True)
 
         with c_right:
-            st.markdown("#### 🔬 Granular Pollutant Concentrations")
+            st.markdown("<h5 style='margin-bottom:2px;'>🔬 Granular Pollutant Concentrations</h5>", unsafe_allow_html=True)
             bar_fig = render_pollutants_bar(city_data)
             st.plotly_chart(bar_fig, use_container_width=True, config={"displayModeBar": False})
             st.caption(f"📍 **Telemetry Provenance:** {prov_info['badge']} — {prov_info['tooltip']}. Calculation: {city_data.get('calculation_method', 'CPCB NAQI 2014')}.")
 
         # 24-Hour Trend Visualizer
-        st.markdown("---")
-        st.markdown(f"#### 📈 24-Hour Temporal Trend — {selected_display}")
+        st.markdown("<hr style='margin:10px 0;'>", unsafe_allow_html=True)
+        st.markdown(f"<h5 style='margin-bottom:2px;'>📈 24-Hour Temporal Trend — {selected_display}</h5>", unsafe_allow_html=True)
         history_df = get_city_history(engine, selected_slug, limit=48)
         trend_fig = render_history_trend(history_df, selected_display)
         st.plotly_chart(trend_fig, use_container_width=True, config={"displayModeBar": False})

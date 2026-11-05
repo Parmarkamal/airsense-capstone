@@ -42,10 +42,12 @@ def create_india_air_map(df_latest: pd.DataFrame) -> folium.Map:
         if pd.isna(lat) or pd.isna(lon):
             continue
 
-        aqi = row.get("aqi")
+        cpcb = row.get("cpcb_aqi")
+        aqi = cpcb if (pd.notna(cpcb) and cpcb is not None) else row.get("aqi")
         city_name = row.get("city_display_name", row.get("city", "Unknown"))
         pm25 = row.get("pm25")
         pm10 = row.get("pm10")
+        prom = row.get("prominent_pollutant") or "PM2.5"
         category = get_aqi_category(aqi)
         source = row.get("data_source", "WAQI")
 
@@ -95,6 +97,7 @@ def create_india_air_map(df_latest: pd.DataFrame) -> folium.Map:
                 </span>
             </div>
             <div style="font-size: 12px; color: #334155; line-height: 1.6; background-color: #F8FAFC; padding: 8px 10px; border-radius: 8px; border: 1px solid #E2E8F0;">
+                • <b>Key Pollutant:</b> {prom}<br>
                 • <b>PM2.5:</b> {safe_pm25} µg/m³<br>
                 • <b>PM10:</b> {safe_pm10} µg/m³<br>
                 • <b>Source:</b> {source}<br>
