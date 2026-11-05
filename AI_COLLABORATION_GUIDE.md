@@ -1,89 +1,91 @@
-# 🤖 AirSense: Dual-AI Collaboration Guide (Cursor + Kiro)
+# 🤖 AirSense: Kiro AI Master Execution Guide
 
-> **Goal**: Complete AirSense Phases 5–10 with **zero conflicts, zero code regressions, and 100% viva readiness**.
+> **Status**: Cursor reached its usage limit. **Kiro is now your 100% Primary Full-Stack Engineer.**
+> **Current Progress**: **Phases 1 to 6 are 100% COMPLETE & PASSING 50/50 TESTS.**
 
 ---
 
-## 1. The Division of Labor
+## 1. Project Health & Completed Phases
 
+| Phase | Description | Status | Tests |
+|---|---|---|---|
+| **Phase 1** | Kafka Streaming Pipeline & TimescaleDB | ✅ Complete | 20/20 passed |
+| **Phase 2** | Streamlit 5-View Dashboard & Leaflet GIS | ✅ Complete | Verified |
+| **Phase 3** | LightGBM 24h/48h AQI Forecasting | ✅ Complete | 5/5 passed |
+| **Phase 4** | Grounded GenAI RAG Health Advisor (Ollama + ChromaDB) | ✅ Complete | 7/7 passed |
+| **Phase 5** | Real-Time Data Integrity & Hybrid Open-Meteo Ingestion | ✅ Complete | 9/9 passed |
+| **Phase 6** | AI Safety Guardrails, Disclaimer & 4 Persona Pills | ✅ Complete | 9/9 passed |
+| **TOTAL** | **Phases 1 to 6 Verified** | ✅ **LOCKED & SAFE** | **50/50 PASSED** |
+
+---
+
+## 2. Kiro's Roadmap (Phases 7 to 10)
+
+Kiro reads its instructions automatically from `.kiro/steering/` and `.kiro/specs/`. 
+
+All you need to do is paste the exact prompt for each phase into Kiro Chat:
+
+---
+
+### 📌 STEP 1: Run Phase 7 in Kiro (ML Baselines, Explainability & SHAP)
+Paste this into Kiro Chat:
+
+```text
+Read .kiro/steering/ and .kiro/specs/phase7_ml_baselines_shap.md.
+Phases 1-6 are complete (50/50 tests passing).
+Please implement Phase 7:
+1. In airsense/ml/data_prep.py & train_forecast.py: Fix train-serve feature skew and add Persistence (t-24h) and Seasonal benchmark baselines.
+2. In airsense/dashboard/components/forecast_view.py: Render the expanding forecast confidence cone (±1σ, ±2σ) and SHAP feature importance plot.
+3. Run python -m pytest tests/ to verify all tests pass.
 ```
-                                  ┌───────────────────────────┐
-                                  │   AirSense Architecture   │
-                                  │ (AirSense_Project_Status) │
-                                  └─────────────┬─────────────┘
-                                                │
-                     ┌──────────────────────────┴──────────────────────────┐
-                     ▼                                                     ▼
-      ╔═════════════════════════════╗                       ╔═════════════════════════════╗
-      ║            KIRO             ║                       ║           CURSOR            ║
-      ║  (Chief Architect & QA)     ║                       ║ (Lead Implementation Eng.)  ║
-      ╠═════════════════════════════╣                       ╠═════════════════════════════╣
-      ║ • Reads `.kiro/steering/`   ║                       ║ • Reads `.cursorrules`      ║
-      ║ • Writes specs & tests      ║ ─── Passes Spec ────► ║ • Modifies code files       ║
-      ║ • Audits code changes       ║ ◄── Passes Code ───── ║ • Runs terminal commands    ║
-      ║ • Verifies zero regressions ║                       ║ • Patches bugs & stacktraces║
-      ╚═════════════════════════════╝                       ╚═════════════════════════════╝
+
+---
+
+### 📌 STEP 2: Run Phase 8 in Kiro (Offline Demo & Disaster Resilience)
+Paste this into Kiro Chat:
+
+```text
+Read .kiro/specs/phase8_offline_demo_replay.md.
+Please implement Phase 8:
+1. In airsense/ingestion/fetch_aqi_replay.py: Build the historical CSV streamer using data/backup/aqi_7day_backup.csv to publish into Kafka with synthetic timestamps.
+2. In airsense/dashboard/app.py: Add the amber REPLAY MODE banner when offline replay is running.
+3. Create airsense/scripts/run_offline_demo.bat for 1-click zero-internet presentation.
+4. Run python -m pytest tests/ to verify.
 ```
 
-### Tool Specialization:
-| Task | Assigned AI | Why This Tool? |
-|---|---|---|
-| **Feature Specification & Acceptance Criteria** | **Kiro** (Spec Mode) | Kiro excels at converting high-level ideas into structured task lists without touching working code. |
-| **Writing Unit Tests (`tests/*.py`)** | **Kiro** (Test Mode) | Ensures tests are written objectively before or during implementation. |
-| **Writing Code & Modifying Files** | **Cursor** (Agent Mode) | Cursor is the fastest multi-file editor with seamless terminal and dependency handling. |
-| **Fixing Bugs & Stacktraces** | **Cursor** (Agent / Chat) | Cursor can read tracebacks, jump directly to line numbers, and apply surgical edits. |
-| **Reviewing Diffs & Security / Port Audits** | **Kiro** (Review Mode) | Checks that ports (5433, 9092, 11434) and schema rules weren't violated. |
-| **Git Backups & Master Blueprint** | **Antigravity** (Or 1-Click Script) | Keeps the single source of truth updated and provides 1-click GitHub push. |
+---
+
+### 📌 STEP 3: Run Phase 9 in Kiro (BI Operational Analytics & Power BI)
+Paste this into Kiro Chat:
+
+```text
+Read .kiro/specs/phase9_bi_analytics_powerbi.md.
+Please implement Phase 9:
+1. In airsense/dashboard/components/insights.py: Build the Operational Analytics tab (Combustion Ratio PM2.5/PM10, WoW trend %, city pollution rank matrix).
+2. In airsense/scripts/export_powerbi_data.py: Write script exporting Star-Schema CSVs (dim_city, dim_date, fact_aqi_readings).
+3. Create airsense/docs/powerbi_setup.md documenting the star schema and 5 DAX measures.
+4. Run python -m pytest tests/ to verify.
+```
 
 ---
 
-## 2. The 3-Step "Ping-Pong" Workflow (For Every Task)
+### 📌 STEP 4: Run Phase 10 in Kiro (System Observability & Viva Polish)
+Paste this into Kiro Chat:
 
-### Step 1: In KIRO (Create the Spec & Test)
-1. Open **Kiro IDE**.
-2. Select **Spec** or start a chat in Kiro.
-3. **Copy-paste this prompt**:
-   > *"I am working on AirSense Phase 5, Task 5.1 (Hybrid WAQI + Open-Meteo Ingestion). Read `.kiro/steering/` and `.kiro/specs/phase5_realtime_data_integrity.md`. Please write unit tests in `airsense/tests/test_hybrid_fetch.py` that mock WAQI downtime and verify Open-Meteo fallback."*
-4. Kiro creates the test file.
-
-### Step 2: In CURSOR (Implement the Code)
-1. Open **Cursor IDE** (make sure workspace is `capstone_project` on `master`).
-2. Open Cursor Agent (`Ctrl + I` or Chat).
-3. **Copy-paste this prompt**:
-   > *"Read `.cursorrules` and `.kiro/specs/phase5_realtime_data_integrity.md`. Implement Task 5.1 in `airsense/ingestion/fetch_aqi.py`. Add the Open-Meteo fallback when WAQI is older than 2 hours or offline. Run `python -m pytest tests/` and verify all tests pass."*
-4. Cursor makes the edits and verifies in terminal.
-
-### Step 3: In KIRO (Verify & Approve)
-1. Switch back to **Kiro IDE**.
-2. **Copy-paste this prompt**:
-   > *"Review the git diff of `airsense/ingestion/fetch_aqi.py`. Check for any breaking changes against Phases 1-4 and run `python -m pytest tests/`. If all pass, confirm the task is complete."*
-3. Done! Run `airsense\scripts\github_push.bat` to push to GitHub.
+```text
+Read .kiro/specs/phase10_observability_viva_defense.md.
+Please implement Phase 10:
+1. In airsense/dashboard/components/health_view.py: Build the Pipeline Health tab showing Kafka lag, TimescaleDB latency, and Ollama status.
+2. Run the final regression test suite: python -m pytest tests/
+3. Confirm all tests pass and AirSense is 100% viva-ready.
+```
 
 ---
 
-## 3. Explaining Your Screenshots
+## 3. Emergency Safety Net
 
-### In Screenshot 1 (Kiro IDE):
-- **Why did `airsense_cursor`, `airsense-web`, and `Air-Sense-Master.zip` show up in Kiro's explorer?**
-  They showed up because Kiro was opened before we deleted them with Git, or the editor tree had not refreshed yet.
-- **How to fix in Kiro**:
-  1. Close the open tab `04_YOUR_TASKS.md` (which was inside the deleted `airsense_cursor` folder).
-  2. Right-click anywhere in Kiro's Explorer and click **"Refresh Explorer"** (or restart Kiro).
-  3. All those deleted folders will disappear, leaving only clean `airsense/`.
-
-### In Screenshot 2 (Cursor IDE):
-- **Cursor is already opened on `capstone_project` on `master` branch!**
-  Notice under "Repositories", there is a leftover bookmark named `airsense_cursor`. That was just a past folder bookmark from earlier; your active working repo is `capstone_project` (checked out on `master`).
-- Cursor will automatically read `.cursorrules` as soon as you type any message.
-
----
-
-## 4. Emergency Golden Rule: If ANY AI Breaks Anything
-
-If Cursor or Kiro ever makes an error, modifies the wrong file, or tests fail:
-**DO NOT PANIC.** Run this single command in PowerShell:
+If anything ever goes wrong or an error occurs in Kiro:
 ```powershell
 git reset --hard HEAD
 ```
-Your codebase will instantly return to the 100% working baseline (32/32 tests passing) in 1 second.
-
+This restores your codebase back to the exact 50-test-passing state (Commit `6c85bb4`) in 1 second.
