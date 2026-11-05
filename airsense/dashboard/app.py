@@ -251,6 +251,15 @@ def main():
         cols = st.columns(len(df_latest))
         for idx, (_, row) in enumerate(df_latest.iterrows()):
             category = get_aqi_category(row["aqi"])
+            freshness_label = row.get("freshness_label", "🟢 Live (<1h old)")
+            freshness_color = row.get("freshness_color", "green")
+            age_hours = row.get("data_age_hours")
+            age_text = (
+                f"{float(age_hours):.1f}h"
+                if age_hours is not None and pd.notna(age_hours) and age_hours != float("inf")
+                else "n/a"
+            )
+            source = row.get("data_source", "WAQI")
             with cols[idx]:
                 st.markdown(f"""
                 <div class="kpi-card">
@@ -263,6 +272,12 @@ def main():
                     <span class="badge" style="background-color:{category['bg_color']}; color:{category['text_color']};">
                         {category['label']}
                     </span>
+                    <div style="margin-top:8px; font-size:11px; font-weight:600; color:{freshness_color};">
+                        {freshness_label}
+                    </div>
+                    <div style="margin-top:2px; font-size:10px; color:#64748B;">
+                        Age {age_text} · {source}
+                    </div>
                 </div>
                 """, unsafe_allow_html=True)
 

@@ -1,5 +1,5 @@
 # 🌬️ AirSense — Master Project Status & 10x Engineering Blueprint
-*Single Source of Truth | Updated: October 30, 2026*
+*Single Source of Truth | Updated: November 5, 2026*
 *M.Sc. IT (Business Intelligence & Analytics) — Semester 3 Capstone*
 *Gujarat University, CPC | Supervisor: Ms. Swati Solanki*
 *Team: Parmar Kamal (202527600007), Pandya Krushna (202527600006), Jadeja Meetrajsinh (202527600001)*
@@ -45,8 +45,8 @@ Phase 1: Real-Time Streaming Data Pipeline      [██████████�
 Phase 2: Interactive Visual Analytics & GIS Map [████████████████████] 100% ✅ COMPLETE
 Phase 3: LightGBM 48-Hour Machine Learning      [████████████████████] 100% ✅ COMPLETE
 Phase 4: RAG AI Health Advisory System          [████████████████████] 100% ✅ COMPLETE
-Phase 5: Real-Time Data Integrity & Live Truth  [░░░░░░░░░░░░░░░░░░░░]   0% ⏳ STARTING HERE
-Phase 6: Grounded AI Safety & Domain Guardrails [░░░░░░░░░░░░░░░░░░░░]   0% ⏳ PLANNED
+Phase 5: Real-Time Data Integrity & Live Truth  [████████████████████] 100% ✅ COMPLETE
+Phase 6: Grounded AI Safety & Domain Guardrails [░░░░░░░░░░░░░░░░░░░░]   0% ⏳ STARTING HERE
 Phase 7: ML Explainability (SHAP) & Baselines   [░░░░░░░░░░░░░░░░░░░░]   0% ⏳ PLANNED
 Phase 8: Offline Resilience & Demo Replay Mode  [░░░░░░░░░░░░░░░░░░░░]   0% ⏳ PLANNED
 Phase 9: Business Intelligence (BI & Power BI)  [████████████░░░░░░░░]  60% ⏳ IN PROGRESS
@@ -106,13 +106,14 @@ Pune           18.5204° N, 73.8567° E   2026-10-30 17:00 IST    118      23.6 
 - 7/7 unit tests passing in `tests/test_rag.py`.
 
 ### PHASE 5: Real-Time Data Integrity & Live Reliability Engine
-**Status:** `⏳ NEXT IMMEDIATE STEP (Priority 1)`
-- **Task 5.1:** Update `ingestion/fetch_aqi.py` with **Smart Hybrid Ingestion** (WAQI primary + Open-Meteo fallback).
-- **Task 5.2:** Add Data Freshness Monitor in `dashboard/data_access.py` (`data_age_hours`).
-- **Task 5.3:** Add Freshness Badges to `dashboard/app.py` (🟢 Fresh / 🟡 Delayed / 🔴 Stale).
-- **Task 5.4:** Create Python Background Daemon `ingestion/fetch_daemon.py` with exponential backoff & heartbeat logging (`logs/heartbeat.json`).
-- **Task 5.5 (NEW BEAST UPGRADE):** **Neighborhood Station Granularity**: Add multi-station monitoring for Ahmedabad (Vatva GIDC, ISRO Satellite, Maninagar, Chandkheda, Airport) so residents can view local neighborhood readings vs industrial estates.
-- **Task 5.6 (NEW BEAST UPGRADE):** **Dual-Standard Display (CPCB NAQI vs US EPA)**: Compute official CPCB sub-index alongside US EPA reference badge with explanatory tooltip.
+**Status:** `100% COMPLETE ✅` (Verified Nov 5, 2026 — 41/41 pytest)
+- **Task 5.1:** ✅ `ingestion/fetch_aqi.py` hybrid engine — WAQI primary; Open-Meteo fallback when offline or timestamp >2h. Live verify: **6/6 cities same-day** (Delhi=WAQI; Ahmedabad/Bengaluru/Pune/Gandhinagar/Mumbai=Open-Meteo-Live).
+- **Task 5.2:** ✅ `dashboard/data_access.py` — `calculate_data_freshness()` + `data_age_hours` / freshness columns on latest readings.
+- **Task 5.3:** ✅ Freshness badges on KPI cards (`dashboard/app.py`) and Folium tooltips/popups (`map_view.py`).
+- **Task 5.4:** ✅ `ingestion/fetch_daemon.py` — hourly loop, exponential backoff, heartbeat at `logs/heartbeat.json`.
+- **Task 5.5 (NEW BEAST UPGRADE — deferred):** Neighborhood multi-station Ahmedabad granularity (post-core).
+- **Task 5.6 (NEW BEAST UPGRADE — deferred):** Dual CPCB NAQI vs US EPA badge (post-core).
+- **Tests:** `tests/test_hybrid_fetch.py` (9 new) + prior suite = **41 passed**.
 
 ### PHASE 6: Grounded AI Safety & Domain Guardrails
 **Status:** `⏳ PLANNED (Priority 2)`
@@ -395,8 +396,8 @@ python -m streamlit run dashboard/app.py
 ## 📍 10. EXACT STARTING POINT FOR NEXT SESSION
 
 Whenever we resume, the exact starting task is:
-👉 **Phase 5, Task 5.1: Implement Hybrid Ingestion Engine in `ingestion/fetch_aqi.py`.**
-- **Input:** Cities configured in `config.yaml` with GPS coordinates.
-- **Logic:** Primary query to WAQI; if timestamp older than 2 hours, automatically fetch live hourly observations via Open-Meteo.
-- **Output:** 100% fresh, live readings matching Google AQI right now for all 6 cities.
-- **Verification:** Run `python ingestion/fetch_aqi.py` and confirm all 6 cities return today's timestamp.
+👉 **Phase 6, Task 6.1: Grounded AI Safety & Domain Guardrails** (see `.kiro/specs/phase6_ai_safety_guardrails.md`).
+- Inject live AQI/PM2.5/city into LLM prompt context.
+- Out-of-domain + medical refusal guardrails.
+- Confidence thresholding + persona-based advisories.
+- **Prerequisite done:** Phase 5 hybrid ingestion verified 6/6 same-day readings (Nov 5, 2026).

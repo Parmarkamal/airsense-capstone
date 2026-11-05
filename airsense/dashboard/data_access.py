@@ -13,7 +13,9 @@ Handles all database reads from TimescaleDB for the Streamlit dashboard:
 from __future__ import annotations
 
 import logging
+from datetime import datetime, timezone
 from typing import Any
+
 import pandas as pd
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
@@ -21,10 +23,48 @@ from sqlalchemy.engine import Engine
 logger = logging.getLogger("airsense.dashboard.data")
 
 
+def calculate_data_freshness(
+    reading_time: datetime | None,
+) -> tuple[str, str, float]:
+    """
+    Classify observation age for dashboard freshness badges.
+
+    Returns:
+        (badge_color, label, age_in_hours)
+        - < 1 hour:  ("green", "🟢 Live (<1h old)", age)
+        - 1–3 hours: ("gold",  "🟡 Delayed (1-3h old)", age)
+        - > 3 hours: ("red",   "🔴 Stale (>3h old)", age)
+    """
+    if reading_time is None or (isinstance(reading_time, float) and pd.isna(reading_time)):
+        return ("red", "🔴 Stale (>3h old)", float("inf"))
+
+    if isinstance(reading_time, str):
+        try:
+            reading_time = datetime.fromisoformat(reading_time.replace("Z", "+00:00"))
+        except ValueError:
+            return ("red", "🔴 Stale (>3h old)", float("inf"))
+
+    if reading_time.tzinfo is None:
+        reading_time = reading_time.replace(tzinfo=timezone.utc)
+    else:
+        reading_time = reading_time.astimezone(timezone.utc)
+
+    age_hours = (datetime.now(timezone.utc) - reading_time).total_seconds() / 3600.0
+    if age_hours < 0:
+        age_hours = 0.0
+
+    if age_hours < 1.0:
+        return ("green", "🟢 Live (<1h old)", age_hours)
+    if age_hours <= 3.0:
+        return ("gold", "🟡 Delayed (1-3h old)", age_hours)
+    return ("red", "🔴 Stale (>3h old)", age_hours)
+
+
 def get_latest_readings_all_cities(engine: Engine) -> pd.DataFrame:
     """
     Fetch the most recent reading for each city from the aqi_readings hypertable.
     Uses DISTINCT ON (city) ordered by time DESC for peak performance.
+    Annotates each row with data_age_hours and freshness badge fields.
     """
     query = text("""
         SELECT DISTINCT ON (city)
@@ -41,6 +81,7 @@ def get_latest_readings_all_cities(engine: Engine) -> pd.DataFrame:
             o3,
             lat,
             lon,
+            data_source,
             fetched_at
         FROM aqi_readings
         ORDER BY city, time DESC;
@@ -48,6 +89,21 @@ def get_latest_readings_all_cities(engine: Engine) -> pd.DataFrame:
     try:
         with engine.connect() as conn:
             df = pd.read_sql(query, conn)
+        if df.empty:
+            return df
+
+        colors: list[str] = []
+        labels: list[str] = []
+        ages: list[float] = []
+        for ts in df["time"]:
+            color, label, age = calculate_data_freshness(ts)
+            colors.append(color)
+            labels.append(label)
+            ages.append(age)
+
+        df["freshness_color"] = colors
+        df["freshness_label"] = labels
+        df["data_age_hours"] = ages
         return df
     except Exception as exc:
         logger.error("Failed to query latest readings: %s", exc)

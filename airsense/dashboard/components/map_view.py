@@ -15,6 +15,7 @@ from __future__ import annotations
 import folium
 import pandas as pd
 from dashboard.components.gauges import get_aqi_category
+from dashboard.data_access import calculate_data_freshness
 
 
 def create_india_air_map(df_latest: pd.DataFrame) -> folium.Map:
@@ -46,6 +47,12 @@ def create_india_air_map(df_latest: pd.DataFrame) -> folium.Map:
         pm25 = row.get("pm25")
         pm10 = row.get("pm10")
         category = get_aqi_category(aqi)
+        source = row.get("data_source", "WAQI")
+
+        if "freshness_label" in row.index and pd.notna(row.get("freshness_label")):
+            freshness_label = str(row["freshness_label"])
+        else:
+            _, freshness_label, _ = calculate_data_freshness(row.get("time"))
 
         safe_aqi = int(aqi) if aqi is not None and not pd.isna(aqi) else "--"
         safe_pm25 = f"{float(pm25):.1f}" if pm25 is not None and not pd.isna(pm25) else "--"
@@ -71,6 +78,7 @@ def create_india_air_map(df_latest: pd.DataFrame) -> folium.Map:
             border-left: 4px solid {category['color']};
         ">
             {city_name}: <span style="color: {category['color']};">{safe_aqi} AQI</span>
+            <span style="font-weight:600; font-size:10px; opacity:0.9;"> · {freshness_label}</span>
         </div>
         """
 
@@ -89,14 +97,14 @@ def create_india_air_map(df_latest: pd.DataFrame) -> folium.Map:
             <div style="font-size: 12px; color: #334155; line-height: 1.6; background-color: #F8FAFC; padding: 8px 10px; border-radius: 8px; border: 1px solid #E2E8F0;">
                 • <b>PM2.5:</b> {safe_pm25} µg/m³<br>
                 • <b>PM10:</b> {safe_pm10} µg/m³<br>
-                • <b>Source:</b> Ground-level WAQI/CPCB
+                • <b>Source:</b> {source}<br>
+                • <b>Freshness:</b> {freshness_label}
             </div>
             <div style="font-size: 11px; color: {category['text_color']}; background: {category['bg_color']}; padding: 6px 8px; border-radius: 6px; margin-top: 8px; line-height: 1.4;">
                 <b>Advisory:</b> {category['advisory']}
             </div>
         </div>
         """
-
         # Outer glowing halo
         folium.CircleMarker(
             location=[lat, lon],
