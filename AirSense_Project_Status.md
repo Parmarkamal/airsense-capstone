@@ -48,8 +48,8 @@ Phase 4: RAG AI Health Advisory System          [██████████�
 Phase 5: Real-Time Data Integrity & Live Truth  [████████████████████] 100% ✅ COMPLETE (41/41 Tests)
 Phase 6: Grounded AI Safety & Domain Guardrails [████████████████████] 100% ✅ COMPLETE (50/50 Tests)
 Phase 7: ML Explainability (SHAP) & Baselines   [████████████████████] 100% ✅ COMPLETE (60/60 Tests)
-Phase 8: Offline Resilience & Demo Replay Mode  [░░░░░░░░░░░░░░░░░░░░]   0% ⏳ NEXT UP
-Phase 9: Business Intelligence (BI & Power BI)  [████████████░░░░░░░░]  60% ⏳ IN PROGRESS
+Phase 8: Offline Resilience & Demo Replay Mode  [████████████████████] 100% ✅ COMPLETE (78/78 Tests)
+Phase 9: Business Intelligence (BI & Power BI)  [████████████░░░░░░░░]  60% ⏳ NEXT SPRINT
 Phase 10: System Observability & Viva Readiness [░░░░░░░░░░░░░░░░░░░░]   0% ⏳ FINAL SPRINT
 ```
 
@@ -135,10 +135,11 @@ Pune           18.5204° N, 73.8567° E   2026-10-30 17:00 IST    118      23.6 
 - **Task 7.4:** **Expanding Horizon Confidence Cone**: Dual expanding bands ($\pm 1\sigma$ at 68% and $\pm 2\sigma$ at 95% opacity) scaling with $\sqrt{h}$ up to $6.93\times$ at step 48.
 
 ### PHASE 8: Offline Resilience & Demo Replay Mode
-**Status:** `⏳ PLANNED (Priority 4)`
-- **Task 8.1:** Complete `ingestion/fetch_aqi_replay.py` streaming `aqi_7day_backup.csv` through Kafka.
-- **Task 8.2:** Add prominent Streamlit UI Indicator (`"📼 REPLAY MODE — Simulated Data"`).
-- **Task 8.3:** Create one-click master offline launcher `scripts/start_offline_demo.bat`.
+**Status:** `✅ 100% COMPLETE (78/78 Tests Passing)`
+- **Task 8.1:** Completed `ingestion/fetch_aqi_replay.py` with sliding timestamp arithmetic streaming `aqi_7day_backup.csv` through Kafka.
+- **Task 8.2:** Added prominent Streamlit UI Indicator banner (`"📼 REPLAY MODE ACTIVE: Offline Resilience Stream"`).
+- **Task 8.3:** Created one-click master offline launcher `scripts/run_offline_demo.bat`.
+- **Tests:** Added 18 unit tests in `tests/test_replay.py` covering timestamp shifting, rate limiting, and Kafka delivery.
 
 ### PHASE 9: Business Intelligence & Executive Reporting
 **Status:** `⏳ 60% COMPLETE (Priority 5)`
