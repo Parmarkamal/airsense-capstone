@@ -39,3 +39,4 @@
     python -m pytest tests/
 - Verify all 32 tests pass before declaring any task complete.
 - Never claim code works without running terminal verification.
+
