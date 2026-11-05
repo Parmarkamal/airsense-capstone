@@ -46,6 +46,7 @@ from dashboard.data_access import (
     get_city_history,
     get_pipeline_stats,
     get_city_forecast,
+    is_replay_mode_active,
 )
 from dashboard.components.gauges import (
     get_aqi_category,
@@ -103,6 +104,19 @@ st.markdown("""
         border-radius: 8px;
         font-size: 13px;
         margin-bottom: 20px;
+    }
+
+    .replay-banner {
+        background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+        border: 2px solid #F59E0B;
+        color: #78350F;
+        padding: 14px 22px;
+        border-radius: 10px;
+        font-size: 14px;
+        margin-bottom: 20px;
+        font-weight: 600;
+        text-align: center;
+        box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
     }
 
     .kpi-card {
@@ -240,6 +254,15 @@ def main():
     if df_latest.empty:
         st.warning("No data found in TimescaleDB. Please run `python ingestion/fetch_aqi.py` to ingest live records.")
         return
+
+    # ── Phase 8: Replay Mode Detection Banner ───────────────────────────────────
+    if is_replay_mode_active(df_latest):
+        st.markdown("""
+        <div class="replay-banner">
+            📼 <b>REPLAY MODE ACTIVE:</b> Displaying simulated historical sensor stream
+            (Offline Resilience Mode) — Internet/WAQI API unavailable.
+        </div>
+        """, unsafe_allow_html=True)
 
     # ═══════════════════════════════════════════════════════════════════════════
     # VIEW 1: LIVE TELEMETRY

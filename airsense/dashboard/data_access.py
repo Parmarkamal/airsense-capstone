@@ -181,3 +181,25 @@ def get_city_forecast(engine: Engine, city_slug: str) -> pd.DataFrame:
     except Exception as exc:
         logger.error("Failed to query forecast for %s: %s", city_slug, exc)
         return pd.DataFrame()
+
+
+def is_replay_mode_active(df_latest: pd.DataFrame) -> bool:
+    """
+    Check if the dashboard is displaying replay (offline) data.
+
+    Returns True when any of the latest city readings have
+    data_source == 'Replay-Backup', indicating the historical CSV
+    replay streamer was used instead of live API ingestion.
+
+    Parameters
+    ----------
+    df_latest : pd.DataFrame
+        The latest readings DataFrame from get_latest_readings_all_cities().
+
+    Returns
+    -------
+    bool
+    """
+    if df_latest.empty or "data_source" not in df_latest.columns:
+        return False
+    return bool((df_latest["data_source"] == "Replay-Backup").any())
