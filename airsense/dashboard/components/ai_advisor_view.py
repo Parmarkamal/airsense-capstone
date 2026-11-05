@@ -249,50 +249,18 @@ def render_ai_advisor_view(df_latest: pd.DataFrame | None = None) -> None:
         
         for msg in reversed(st.session_state.chat_history):  # Most recent first
             if msg["role"] == "user":
-                st.markdown(f"""
-                <div style="
-                    background: #EFF6FF; 
-                    border-left: 4px solid #2563EB; 
-                    padding: 12px 16px; 
-                    border-radius: 8px; 
-                    margin: 8px 0;
-                    font-size: 15px;
-                ">
-                    <b>🙋 You:</b> {msg['content']}
-                </div>
-                """, unsafe_allow_html=True)
+                with st.chat_message("user", avatar="🙋"):
+                    st.markdown(f"**You:** {msg['content']}")
             
             elif msg["role"] == "assistant":
-                # Format the answer with source citations
-                sources_html = ""
-                if msg.get("sources"):
-                    source_tags = " ".join([
-                        f'<span style="background:#DCFCE7; color:#166534; padding:2px 8px; '
-                        f'border-radius:4px; font-size:11px; margin-right:4px;">{s}</span>'
-                        for s in msg["sources"]
-                    ])
-                    sources_html = f'<div style="margin-top:8px;">{source_tags}</div>'
-                
-                model_badge = (
-                    f'<span style="float:right; background:#F1F5F9; color:#64748B; '
-                    f'padding:2px 6px; border-radius:4px; font-size:10px;">'
-                    f'🤖 {msg.get("model", "ollama")} · {msg.get("chunks", 0)} refs</span>'
-                )
-                
-                st.markdown(f"""
-                <div style="
-                    background: #F8FAFC; 
-                    border-left: 4px solid #10B981; 
-                    padding: 14px 16px; 
-                    border-radius: 8px; 
-                    margin: 8px 0;
-                    font-size: 14px;
-                ">
-                    <b>🤖 AirSense Advisor:</b> {model_badge}<br><br>
-                    {msg['content'].replace(chr(10), '<br>')}
-                    {sources_html}
-                </div>
-                """, unsafe_allow_html=True)
+                with st.chat_message("assistant", avatar="🤖"):
+                    model = msg.get("model", "ollama")
+                    chunks = msg.get("chunks", 0)
+                    st.caption(f"🤖 Engine: `{model}` · 📚 {chunks} reference chunks")
+                    st.markdown(msg["content"])
+                    if msg.get("sources"):
+                        sources_str = " · ".join([f"`{s}`" for s in msg["sources"]])
+                        st.markdown(f"**Official Sources:** {sources_str}")
     else:
         # Empty state guidance
         st.info(

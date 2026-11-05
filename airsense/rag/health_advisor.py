@@ -51,7 +51,7 @@ OLLAMA_BASE_URL = "http://localhost:11434"
 DEFAULT_MODEL = "llama3.2:3b"   # Preferred: fast, 2GB, accurate enough
 FALLBACK_MODEL = "qwen2.5-coder:3b"   # Already downloaded on your machine
 TOP_K_RESULTS = 4               # Number of relevant document chunks to retrieve
-RAG_DISTANCE_THRESHOLD = 0.45   # Phase 6: refuse LLM extrapolation when worse
+RAG_DISTANCE_THRESHOLD = 0.75   # Phase 6: refuse LLM extrapolation when worse than 0.75
 
 DOMAIN_REFUSAL_MESSAGE = (
     "I am the AirSense AI Health Advisor, specialized in urban air quality and "
@@ -90,15 +90,26 @@ _PRESCRIPTION_RE = re.compile(
 
 _AIR_HEALTH_KEYWORDS = (
     "aqi", "air quality", "air pollution", "pollution", "pollutant",
-    "pm2.5", "pm2_5", "pm25", "pm10", "no2", "ozone", "so2",
+    "pm2.5", "pm2_5", "pm25", "pm10", "no2", "ozone", "so2", "co",
     "who", "cpcb", "naaqs", "grap",
     "asthma", "copd", "respiratory", "lung", "breathe", "breathing",
-    "mask", "n95", "ffp2", "purifier",
-    "outdoor", "outside", "jog", "jogging", "run", "running", "exercise",
-    "commute", "commuter", "toddler", "child", "children", "infant",
-    "elderly", "pregnant", "heart", "cardiovascular",
-    "smog", "haze", "particulate", "delhi", "mumbai", "ahmedabad",
-    "pune", "bengaluru", "gandhinagar", "safe to", "is it safe",
+    "mask", "n95", "ffp2", "purifier", "filter", "ventilation", "windows",
+    "outdoor", "outside", "out side", "go out", "go outside", "step out",
+    "jog", "jogging", "run", "running", "exercise", "workout", "walk", "walking",
+    "play", "playing", "cycling", "commute", "commuter", "travel", "traveling",
+    "toddler", "child", "children", "infant", "baby", "kids",
+    "elderly", "senior", "old age", "pregnant", "heart", "cardiovascular",
+    "smog", "haze", "dust", "smoke", "particulate",
+    "delhi", "dilli", "ncr", "new delhi",
+    "mumbai", "bombay",
+    "ahmedabad", "ahmedabd", "amdavad", "ahmdabad",
+    "pune", "poona",
+    "bengaluru", "bangalore", "blr",
+    "gandhinagar", "gnr",
+    "safe to", "is it safe", "is it ok", "is it healthy",
+    "best time to", "good time to", "safe time to",
+    "cough", "throat", "headache", "allergy", "allergies",
+    "fresh air", "clean air", "dirty air",
 )
 
 

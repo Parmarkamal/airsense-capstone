@@ -290,7 +290,56 @@ def publish_readings(
     return success, failed
 
 
+def insert_direct_to_db(
+    readings: list[dict[str, Any]],
+    settings: dict[str, Any],
+    log: logging.Logger,
+) -> tuple[int, int]:
+    """
+    Direct TimescaleDB insertion fallback when Kafka broker is offline.
+    Validates each reading through the Pydantic AQIReading model.
+    """
+    from consumer.db import create_db_engine, ensure_tables_exist, insert_reading
+    from consumer.validate import AQIReading
+
+    log.info("Direct DB mode: Inserting %d live readings to TimescaleDB...", len(readings))
+    engine = create_db_engine(settings)
+    ensure_tables_exist(engine)
+
+    success = 0
+    failed = 0
+    for reading in readings:
+        city = reading.get("city", "unknown")
+        try:
+            validated = AQIReading.model_validate(reading)
+            row = validated.to_db_dict()
+            insert_reading(engine, row)
+            success += 1
+            log.info("Direct DB stored: %s | AQI=%s | source=%s", city, reading.get("aqi"), reading.get("data_source"))
+        except Exception as exc:
+            log.error("Direct DB store failed for %s: %s", city, exc)
+            failed += 1
+
+    # Record heartbeat
+    heartbeat_path = PROJECT_ROOT / "logs" / "heartbeat.json"
+    try:
+        heartbeat_path.parent.mkdir(parents=True, exist_ok=True)
+        heartbeat_path.write_text(
+            json.dumps({
+                "last_success": datetime.now(timezone.utc).isoformat(),
+                "batch_size": success,
+                "source": "Direct-DB-Live",
+            }),
+            encoding="utf-8",
+        )
+    except Exception:
+        pass
+
+    return success, failed
+
+
 def run_fetch() -> int:
+    """Fetch all cities sequentially; push readings to Kafka, or fallback to direct TimescaleDB."""
     settings = load_settings()
     log = setup_logging(settings, name="airsense.fetch")
     global logger
@@ -336,7 +385,7 @@ def run_fetch() -> int:
                 time.sleep(delay)
 
     if not readings:
-        log.error("No readings fetched — aborting Kafka publish")
+        log.error("No readings fetched — aborting publish")
         return 1
 
     # Console summary for verification (Phase 5 acceptance)
@@ -361,26 +410,30 @@ def run_fetch() -> int:
         len(readings),
     )
 
-    try:
-        producer = create_producer(settings)
-    except KafkaError as exc:
-        log.error(
-            "Cannot connect to Kafka at %s: %s",
-            settings["kafka"]["bootstrap_servers"],
-            exc,
-        )
-        return 1
+    # Check for direct-db flag or attempt Kafka first
+    use_direct_db = "--direct-db" in sys.argv
+    producer = None
+    if not use_direct_db:
+        try:
+            producer = create_producer(settings)
+        except Exception as exc:
+            log.warning(
+                "Kafka broker unavailable (%s). Falling back to direct TimescaleDB insertion...",
+                exc,
+            )
 
-    success, publish_failed = publish_readings(producer, topic, readings, log)
-    producer.close()
+    if producer is not None:
+        success, publish_failed = publish_readings(producer, topic, readings, log)
+        producer.close()
+    else:
+        success, publish_failed = insert_direct_to_db(readings, settings, log)
 
     log.info(
-        "Fetch complete — fetched=%d errors=%d published=%d publish_failed=%d topic=%s",
+        "Fetch complete — fetched=%d errors=%d stored/published=%d failed=%d",
         len(readings),
         errors,
         success,
         publish_failed,
-        topic,
     )
 
     if success == 0:

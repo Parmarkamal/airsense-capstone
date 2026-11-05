@@ -493,3 +493,4 @@ This guarantees the viva demo never shows an empty dashboard even with no intern
         "🩺 AirSense Pipeline Health · Phase 10 — System Observability & Viva Polish · "
         "M.Sc. Business Intelligence & Analytics Capstone 2026"
     )
+

@@ -74,3 +74,7 @@ $RECYCLE.BIN/
 *.swo
 *~
 
+
+kafkazookeeper-data/
+airsense/logs/*.json
+airsense/logs/*.log
