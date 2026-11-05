@@ -1,5 +1,5 @@
 {
-  "promoted_at": "2026-10-23T15:32:07.389642+00:00",
+  "promoted_at": "2026-11-05T06:36:17.747836+00:00",
   "model_version": "lgbm_v1",
   "rmse": 7.61,
   "mae": 5.77,
@@ -27,6 +27,40 @@
       "importance": 632
     }
   ],
-  "mlflow_run_id": "b2a22dfc71034cefb3545da8a6e5f4d3",
+  "shap_top_features": [
+    {
+      "feature": "aqi_lag_1h",
+      "shap_importance": 26.851784392243903
+    },
+    {
+      "feature": "pm10_lag_1h",
+      "shap_importance": 1.8748714351338276
+    },
+    {
+      "feature": "city",
+      "shap_importance": 1.4293287455097623
+    },
+    {
+      "feature": "cos_hour",
+      "shap_importance": 1.0673471720179257
+    },
+    {
+      "feature": "pm25_lag_1h",
+      "shap_importance": 1.0527809359019626
+    }
+  ],
+  "baseline_metrics": {
+    "persistence": {
+      "rmse": 58.52,
+      "mae": 48.73,
+      "r2": -1.267
+    },
+    "seasonal_24h": {
+      "rmse": 54.03,
+      "mae": 43.08,
+      "r2": -0.932
+    }
+  },
+  "mlflow_run_id": "3db93432307e42afb119977a142ce2c5",
   "promotion_threshold": 30.0
 }

@@ -41,6 +41,8 @@ from ml.training.features import (
     FEATURE_COLUMNS,
     TARGET_COLUMN,
     create_features,
+    compute_persistence_baseline,
+    compute_seasonal_baseline,
 )
 
 # Configure logging
@@ -107,6 +109,9 @@ def train_and_evaluate(
     # Walk-Forward Validation (4 Splits)
     tscv = TimeSeriesSplit(n_splits=4)
     fold_rmses, fold_maes, fold_r2s, fold_da = [], [], [], []
+    # Phase 7: baseline metric accumulators for benchmark comparison
+    fold_persist_rmses, fold_persist_maes, fold_persist_r2s = [], [], []
+    fold_seasonal_rmses, fold_seasonal_maes, fold_seasonal_r2s = [], [], []
 
     logger.info("Initiating 4-fold Walk-Forward Validation (TimeSeriesSplit)...")
 
@@ -138,31 +143,92 @@ def train_and_evaluate(
             fold_r2s.append(r2)
             fold_da.append(da)
 
-            mlflow.log_metric(f"fold_{fold+1}_rmse", round(rmse, 2))
-            mlflow.log_metric(f"fold_{fold+1}_mae", round(mae, 2))
-            logger.info("  Fold %d: RMSE=%.2f | MAE=%.2f | R²=%.3f | DirAcc=%.1f%%", fold + 1, rmse, mae, r2, da)
+            # Phase 7: Benchmark against naive baselines on the same validation set
+            y_val_array = y_val.to_numpy()
+            persist_preds = compute_persistence_baseline(y, val_idx=val_idx)
+            seasonal_preds = compute_seasonal_baseline(y, val_idx=val_idx)
+
+            persist_rmse = float(np.sqrt(mean_squared_error(y_val_array, persist_preds)))
+            persist_mae = float(mean_absolute_error(y_val_array, persist_preds))
+            persist_r2 = float(r2_score(y_val_array, persist_preds))
+
+            seasonal_rmse = float(np.sqrt(mean_squared_error(y_val_array, seasonal_preds)))
+            seasonal_mae = float(mean_absolute_error(y_val_array, seasonal_preds))
+            seasonal_r2 = float(r2_score(y_val_array, seasonal_preds))
+
+            fold_persist_rmses.append(persist_rmse)
+            fold_persist_maes.append(persist_mae)
+            fold_persist_r2s.append(persist_r2)
+            fold_seasonal_rmses.append(seasonal_rmse)
+            fold_seasonal_maes.append(seasonal_mae)
+            fold_seasonal_r2s.append(seasonal_r2)
+
+            mlflow.log_metric(f"fold_{fold+1}_persist_rmse", round(persist_rmse, 2))
+            mlflow.log_metric(f"fold_{fold+1}_seasonal_rmse", round(seasonal_rmse, 2))
+            logger.info(
+                "  Fold %d: RMSE=%.2f | MAE=%.2f | R²=%.3f | DirAcc=%.1f%%",
+                fold + 1, rmse, mae, r2, da,
+            )
+            logger.info(
+                "  Fold %d Baselines — Persistence RMSE=%.2f | Seasonal RMSE=%.2f",
+                fold + 1, persist_rmse, seasonal_rmse,
+            )
 
         mean_rmse = float(np.mean(fold_rmses))
         mean_mae = float(np.mean(fold_maes))
         mean_r2 = float(np.mean(fold_r2s))
         mean_da = float(np.mean(fold_da))
 
+        # Phase 7: aggregate baseline metrics for benchmark comparison
+        mean_persist_rmse = float(np.mean(fold_persist_rmses))
+        mean_persist_mae = float(np.mean(fold_persist_maes))
+        mean_persist_r2 = float(np.mean(fold_persist_r2s))
+        mean_seasonal_rmse = float(np.mean(fold_seasonal_rmses))
+        mean_seasonal_mae = float(np.mean(fold_seasonal_maes))
+        mean_seasonal_r2 = float(np.mean(fold_seasonal_r2s))
+
         mlflow.log_metric("mean_rmse", round(mean_rmse, 2))
         mlflow.log_metric("mean_mae", round(mean_mae, 2))
         mlflow.log_metric("mean_r2", round(mean_r2, 3))
         mlflow.log_metric("mean_directional_accuracy", round(mean_da, 1))
+        mlflow.log_metric("mean_persistence_rmse", round(mean_persist_rmse, 2))
+        mlflow.log_metric("mean_seasonal_rmse", round(mean_seasonal_rmse, 2))
+
+        logger.info(
+            "  Benchmark Summary — LightGBM RMSE=%.2f vs Persistence RMSE=%.2f vs Seasonal RMSE=%.2f",
+            mean_rmse, mean_persist_rmse, mean_seasonal_rmse,
+        )
 
         # Train final production model on full dataset
         logger.info("Training final production model across complete dataset...")
         final_model = lgb.LGBMRegressor(**params)
         final_model.fit(X, y)
 
-        # Feature importances
+        # Feature importances (split-based)
         feature_importance = pd.DataFrame({
             "feature": FEATURE_COLUMNS,
             "importance": final_model.feature_importances_,
         }).sort_values("importance", ascending=False)
         top_features = feature_importance.head(5).to_dict(orient="records")
+
+        # Phase 7: SHAP feature importance via LightGBM built-in TreeSHAP
+        logger.info("Computing SHAP feature attributions via LightGBM TreeSHAP...")
+        try:
+            shap_contrib = final_model.predict(X, pred_contrib=True)
+            # Shape: (n_samples, n_features + 1); last column is the base value
+            mean_abs_shap = np.mean(np.abs(shap_contrib[:, :-1]), axis=0)
+            shap_importance = pd.DataFrame({
+                "feature": FEATURE_COLUMNS,
+                "shap_importance": mean_abs_shap,
+            }).sort_values("shap_importance", ascending=False)
+            top_shap_features = shap_importance.head(5).to_dict(orient="records")
+            logger.info("Top SHAP driver: %s (%.4f)", top_shap_features[0]["feature"], top_shap_features[0]["shap_importance"])
+        except Exception as shap_err:
+            logger.warning("SHAP computation failed, falling back to split importance: %s", shap_err)
+            top_shap_features = [
+                {"feature": r["feature"], "shap_importance": float(r["importance"])}
+                for r in top_features
+            ]
 
         # Save to staging
         staging_dir = PROJECT_ROOT / "ml" / "staging"
@@ -189,6 +255,19 @@ def train_and_evaluate(
                 "r2": round(mean_r2, 3),
                 "directional_accuracy": round(mean_da, 1),
                 "top_features": top_features,
+                "shap_top_features": top_shap_features,
+                "baseline_metrics": {
+                    "persistence": {
+                        "rmse": round(mean_persist_rmse, 2),
+                        "mae": round(mean_persist_mae, 2),
+                        "r2": round(mean_persist_r2, 3),
+                    },
+                    "seasonal_24h": {
+                        "rmse": round(mean_seasonal_rmse, 2),
+                        "mae": round(mean_seasonal_mae, 2),
+                        "r2": round(mean_seasonal_r2, 3),
+                    },
+                },
                 "mlflow_run_id": run.info.run_id,
                 "promotion_threshold": promotion_threshold,
             }
@@ -205,6 +284,19 @@ def train_and_evaluate(
             "directional_accuracy": round(mean_da, 1),
             "promoted": promoted,
             "top_features": top_features,
+            "shap_top_features": top_shap_features,
+            "baseline_metrics": {
+                "persistence": {
+                    "rmse": round(mean_persist_rmse, 2),
+                    "mae": round(mean_persist_mae, 2),
+                    "r2": round(mean_persist_r2, 3),
+                },
+                "seasonal_24h": {
+                    "rmse": round(mean_seasonal_rmse, 2),
+                    "mae": round(mean_seasonal_mae, 2),
+                    "r2": round(mean_seasonal_r2, 3),
+                },
+            },
             "mlflow_run_id": run.info.run_id,
         }
         return results
@@ -221,6 +313,19 @@ def main():
     print(f"  • R² Score:                  {results['mean_r2']}")
     print(f"  • Directional Accuracy:      {results['directional_accuracy']}%")
     print(f"  • Promoted to Production:    {results['promoted']}")
+    print()
+    print("  📊 Phase 7 Benchmark Comparison:")
+    bm = results.get("baseline_metrics", {})
+    persist = bm.get("persistence", {})
+    seasonal = bm.get("seasonal_24h", {})
+    print(f"  • Persistence RMSE:          {persist.get('rmse', 'N/A')} AQI")
+    print(f"  • Seasonal 24h RMSE:          {seasonal.get('rmse', 'N/A')} AQI")
+    print(f"  • LightGBM beats Persistence: {results['mean_rmse'] < persist.get('rmse', 999)}")
+    print(f"  • LightGBM beats Seasonal:    {results['mean_rmse'] < seasonal.get('rmse', 999)}")
+    print()
+    print("  🔬 Top SHAP Feature Drivers:")
+    for feat in results.get("shap_top_features", [])[:5]:
+        print(f"    - {feat['feature']}: {feat['shap_importance']:.4f}")
     print(f"  • MLflow Run ID:             {results['mlflow_run_id']}")
     print("=" * 60)
 

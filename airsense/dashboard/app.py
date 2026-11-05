@@ -63,6 +63,9 @@ from dashboard.components.insights import (
 from dashboard.components.forecast_view import (
     render_combined_forecast_chart,
     load_model_metadata,
+    render_feature_importance_chart,
+    render_benchmark_comparison_chart,
+    get_benchmark_comparison_data,
 )
 from dashboard.components.ai_advisor_view import render_ai_advisor_view
 
@@ -483,6 +486,43 @@ def main():
             fig = render_combined_forecast_chart(actual_df, forecast_df, selected_city_name)
             st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
+            # Phase 7: Benchmark Comparison — LightGBM vs Naive Baselines
+            st.markdown("---")
+            st.markdown("#### 📊 Model Benchmark — LightGBM vs Naive Baselines")
+            st.markdown(
+                "The LightGBM champion model is benchmarked against two naive forecasting "
+                "baselines. A defensible ML model must demonstrably outperform these trivial "
+                "predictors to justify its deployment complexity."
+            )
+            bench_chart = render_benchmark_comparison_chart()
+            st.plotly_chart(bench_chart, use_container_width=True, config={"displayModeBar": False})
+
+            # Benchmark comparison table
+            bench_data = get_benchmark_comparison_data()
+            st.dataframe(
+                pd.DataFrame(bench_data),
+                use_container_width=True,
+                hide_index=True,
+                column_config={
+                    "Model": st.column_config.TextColumn("Model", width="medium"),
+                    "RMSE": st.column_config.NumberColumn("RMSE", format="%.2f"),
+                    "MAE": st.column_config.NumberColumn("MAE", format="%.2f"),
+                    "R²": st.column_config.NumberColumn("R²", format="%.3f"),
+                },
+            )
+
+            # Phase 7: SHAP Feature Importance & Explainability
+            st.markdown("---")
+            st.markdown("#### 🔬 SHAP Feature Importance — Explainability")
+            st.markdown(
+                "SHAP (SHapley Additive exPlanations) values quantify each feature's "
+                "contribution to individual predictions. The chart below shows the top 5 "
+                "predictive drivers by mean absolute SHAP value, computed via LightGBM's "
+                "built-in TreeSHAP algorithm."
+            )
+            shap_fig = render_feature_importance_chart()
+            st.plotly_chart(shap_fig, use_container_width=True, config={"displayModeBar": False})
+
             # Data Expander Table
             with st.expander("📋 View Hourly Forecast Data Table & Health Advisory", expanded=False):
                 fc_table = forecast_df.copy()
@@ -502,6 +542,15 @@ def main():
                 )
         else:
             st.warning(f"No forecast records found for {selected_city_name}. Run `python ml/training/predict_forecast.py` to generate forecasts.")
+
+            # Phase 7: Show benchmark & SHAP even without forecast data (uses model metadata)
+            st.markdown("---")
+            st.markdown("#### 📊 Model Benchmark — LightGBM vs Naive Baselines")
+            st.plotly_chart(render_benchmark_comparison_chart(), use_container_width=True, config={"displayModeBar": False})
+            st.dataframe(pd.DataFrame(get_benchmark_comparison_data()), use_container_width=True, hide_index=True)
+
+            st.markdown("#### 🔬 SHAP Feature Importance — Explainability")
+            st.plotly_chart(render_feature_importance_chart(), use_container_width=True, config={"displayModeBar": False})
 
     # ═══════════════════════════════════════════════════════════════════════════
     # VIEW 5: AI HEALTH ADVISOR (RAG + Ollama LLM)

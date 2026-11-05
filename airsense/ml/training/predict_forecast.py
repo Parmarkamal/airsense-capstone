@@ -54,7 +54,14 @@ def generate_city_48h_forecast(
 ) -> list[dict]:
     """
     Generate recursive 48-step ahead forecast for a single city.
-    recent_history must have at least 168 rows of chronological hourly data for this city.
+    recent_history must contain 'time', 'city', 'aqi' and pollutant columns.
+
+    Phase 7 fixes train-serve feature skew:
+      - Rolling std uses ddof=1 (sample std) matching training pipeline.
+      - Pollutant lag features (pm25/pm10/no2) use actual historical values
+        instead of AQI-ratio approximations.
+      - Cities with <24 historical points are handled via backward filling
+        rather than being skipped.
     """
     history = recent_history.sort_values(by="time").copy().reset_index(drop=True)
     history["time"] = pd.to_datetime(history["time"])
@@ -62,10 +69,34 @@ def generate_city_48h_forecast(
     generated_at = datetime.now(timezone.utc)
     last_time = history["time"].iloc[-1]
 
-    # Pre-create a working buffer with past AQI series
+    # Pre-create working buffers with past series (AQI + pollutant precursors)
     aqi_series = list(history["aqi"].astype(float).values)
-    timestamps = list(history["time"].values)
 
+    # Phase 7: Track actual pollutant values to eliminate train-serve skew.
+    # Training uses real pm25/pm10/no2 via shift(1); inference must do the same.
+    pm25_series: list[float] = []
+    pm10_series: list[float] = []
+    no2_series: list[float] = []
+
+    for _, row in history.iterrows():
+        pm25_series.append(float(row.get("pm25", np.nan)) if pd.notna(row.get("pm25", np.nan)) else float(row["aqi"]) * 0.65)
+        pm10_series.append(float(row.get("pm10", np.nan)) if pd.notna(row.get("pm10", np.nan)) else float(row["aqi"]) * 0.95)
+        no2_series.append(float(row.get("no2", np.nan)) if pd.notna(row.get("no2", np.nan)) else float(row["aqi"]) * 0.15)
+
+    # Backward fill any leading NaN values in pollutant series
+    for series in (pm25_series, pm10_series, no2_series):
+        for i in range(1, len(series)):
+            if np.isnan(series[i]):
+                series[i] = series[i - 1]
+    # If first value is still NaN, fill from AQI ratio
+    if np.isnan(pm25_series[0]):
+        pm25_series[0] = aqi_series[0] * 0.65
+    if np.isnan(pm10_series[0]):
+        pm10_series[0] = aqi_series[0] * 0.95
+    if np.isnan(no2_series[0]):
+        no2_series[0] = aqi_series[0] * 0.15
+
+    timestamps = list(history["time"].values)
     forecast_records = []
 
     for step in range(1, horizon_hours + 1):
@@ -82,20 +113,26 @@ def generate_city_48h_forecast(
 
         # Lags from the current working buffer (which includes previous recursive predictions!)
         lag_1h = aqi_series[-1]
-        lag_2h = aqi_series[-2] if len(aqi_series) >= 2 else lag_1h
-        lag_3h = aqi_series[-3] if len(aqi_series) >= 3 else lag_2h
-        lag_24h = aqi_series[-24] if len(aqi_series) >= 24 else lag_1h
-        lag_168h = aqi_series[-168] if len(aqi_series) >= 168 else lag_24h
+        lag_2h = aqi_series[-2] if len(aqi_series) >= 2 else aqi_series[0]
+        lag_3h = aqi_series[-3] if len(aqi_series) >= 3 else aqi_series[0]
+        # Phase 7: backward fill for <24 historical points
+        lag_24h = aqi_series[-24] if len(aqi_series) >= 24 else aqi_series[0]
+        lag_168h = aqi_series[-168] if len(aqi_series) >= 168 else aqi_series[0]
 
-        # Rolling statistics from buffer
-        rolling_mean_6h = np.mean(aqi_series[-6:])
-        rolling_std_6h = float(np.std(aqi_series[-6:])) if len(aqi_series) >= 6 else 0.0
-        rolling_mean_24h = np.mean(aqi_series[-24:])
+        # Rolling statistics from buffer — Phase 7: ddof=1 matches training pipeline
+        window_6 = aqi_series[-6:]
+        window_24 = aqi_series[-24:]
+        rolling_mean_6h = float(np.mean(window_6))
+        rolling_std_6h = float(np.std(window_6, ddof=1)) if len(window_6) >= 2 else 0.0
+        rolling_mean_24h = float(np.mean(window_24))
 
-        # Lagged pollutant precursors (approximate from AQI ratio)
-        pm25_lag_1h = lag_1h * 0.65
-        pm10_lag_1h = lag_1h * 0.95
-        no2_lag_1h = lag_1h * 0.15
+        # Phase 7: Use actual pollutant values for lag features (matches training shift(1)).
+        # For the first forecast step, this uses real pm25/pm10/no2 from the last
+        # historical reading. For subsequent steps, uses approximated values derived
+        # from the previous step's AQI prediction (since we only forecast AQI).
+        pm25_lag_1h = pm25_series[-1] if pm25_series and not np.isnan(pm25_series[-1]) else lag_1h * 0.65
+        pm10_lag_1h = pm10_series[-1] if pm10_series and not np.isnan(pm10_series[-1]) else lag_1h * 0.95
+        no2_lag_1h = no2_series[-1] if no2_series and not np.isnan(no2_series[-1]) else lag_1h * 0.15
 
         # Feature dict matching FEATURE_COLUMNS
         feature_row = {
@@ -129,9 +166,12 @@ def generate_city_48h_forecast(
         # Biological / physical clamp
         predicted_aqi = max(10.0, min(500.0, round(predicted_aqi, 1)))
 
-        # Update recursive buffer
+        # Update recursive buffers (AQI + pollutant approximations for next-step lags)
         aqi_series.append(predicted_aqi)
         timestamps.append(target_time)
+        pm25_series.append(predicted_aqi * 0.65)
+        pm10_series.append(predicted_aqi * 0.95)
+        no2_series.append(predicted_aqi * 0.15)
 
         forecast_records.append({
             "generated_at": generated_at,
@@ -167,9 +207,17 @@ def run_all_forecasts_and_save(engine: Engine) -> int:
         with engine.connect() as conn:
             history_df = pd.read_sql(query, conn, params={"city": city})
 
-        if history_df.empty or len(history_df) < 24:
-            logger.warning("Insufficient history in DB for %s (found %d rows).", city, len(history_df))
+        if history_df.empty:
+            logger.warning("No history in DB for %s — skipping.", city)
             continue
+
+        # Phase 7: Handle <24 historical points via backward filling instead of skipping.
+        # Backward fill fills missing early lags with the earliest available value.
+        if len(history_df) < 24:
+            logger.info(
+                "Insufficient history for %s (%d rows < 24) — using backward fill for missing lags.",
+                city, len(history_df),
+            )
 
         city_forecasts = generate_city_48h_forecast(model, city, history_df, horizon_hours=48)
         all_forecasts.extend(city_forecasts)
