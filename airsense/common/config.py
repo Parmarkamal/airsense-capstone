@@ -19,6 +19,8 @@ class CityConfig:
     display_name: str
     lat: float
     lon: float
+    state: str = "Unknown"
+    tier: int = 2
 
 
 def load_settings(config_path: Path | None = None) -> dict[str, Any]:
@@ -62,6 +64,8 @@ def get_cities(settings: dict[str, Any]) -> list[CityConfig]:
             display_name=city["display_name"],
             lat=float(city["lat"]),
             lon=float(city["lon"]),
+            state=city.get("state", "Unknown"),
+            tier=int(city.get("tier", 2)),
         )
         for city in settings["waqi"]["cities"]
     ]

@@ -23,26 +23,38 @@ waqi:
       display_name: "Ahmedabad"
       lat: 23.0225
       lon: 72.5714
+      state: "Gujarat"
+      tier: 2
     - slug: bengaluru
       display_name: "Bengaluru"
       lat: 12.9716
       lon: 77.5946
+      state: "Karnataka"
+      tier: 1
     - slug: pune
       display_name: "Pune"
       lat: 18.5204
       lon: 73.8567
+      state: "Maharashtra"
+      tier: 2
     - slug: gandhinagar
       display_name: "Gandhinagar"
       lat: 23.2156
       lon: 72.6369
+      state: "Gujarat"
+      tier: 3
     - slug: delhi
       display_name: "Delhi"
       lat: 28.6139
       lon: 77.2090
+      state: "Delhi NCR"
+      tier: 1
     - slug: mumbai
       display_name: "Mumbai"
       lat: 19.0760
       lon: 72.8777
+      state: "Maharashtra"
+      tier: 1
 
 ollama:
   base_url: "http://localhost:11434"

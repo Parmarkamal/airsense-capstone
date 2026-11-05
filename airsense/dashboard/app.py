@@ -60,6 +60,9 @@ from dashboard.components.insights import (
     render_diurnal_pattern_chart,
     render_pm_ratio_chart,
     detect_zscore_anomalies,
+    render_wow_trend_chart,
+    render_city_ranking_matrix,
+    render_executive_scorecard,
 )
 from dashboard.components.forecast_view import (
     render_combined_forecast_chart,
@@ -181,7 +184,7 @@ def main():
             options=[
                 "🏠 Live Telemetry",
                 "🗺️ India Air Quality Map",
-                "📊 EDA & Analytical Insights",
+                "📈 Business Intelligence & Analytics",
                 "🔮 48-Hour AQI Forecast",
                 "🤖 AI Health Advisor",
             ],
@@ -402,16 +405,69 @@ def main():
         """, unsafe_allow_html=True)
 
     # ═══════════════════════════════════════════════════════════════════════════
-    # VIEW 3: EDA & ANALYTICAL INSIGHTS
+    # VIEW 3: BUSINESS INTELLIGENCE & ANALYTICS
     # ═══════════════════════════════════════════════════════════════════════════
-    elif selected_view == "📊 EDA & Analytical Insights":
-        st.subheader("📊 Exploratory Data Analysis (EDA) & Diagnostics")
+    elif selected_view == "📈 Business Intelligence & Analytics":
+        st.subheader("📈 Business Intelligence & Executive Analytics")
         st.markdown(
-            "Advanced analytical metrics highlighting cross-city ranking, particle composition, "
-            "diurnal rhythms, and statistical outlier spikes."
+            "Unified BI command center: executive scorecard, Week-over-Week trends, "
+            "city pollution ranking matrix, and diagnostic analytics aligned with "
+            "CPCB NAAQS and WHO 2021 air quality guidelines."
         )
 
-        # Row 1: Ranking + PM Ratio
+        # Fetch extended history for all cities for WoW / matrix computations
+        all_history = pd.DataFrame()
+        for slug in df_latest["city"].tolist():
+            city_hist = get_city_history(engine, slug, limit=336)  # ~14 days
+            if not city_hist.empty:
+                city_hist["city"] = slug
+                all_history = pd.concat([all_history, city_hist], ignore_index=True)
+
+        # ── Executive Scorecard Row ────────────────────────────────────────────
+        scorecard = render_executive_scorecard(df_latest, all_history)
+        if scorecard:
+            sc_cols = st.columns(len(scorecard))
+            for idx, kpi in enumerate(scorecard):
+                with sc_cols[idx]:
+                    st.metric(
+                        kpi["label"],
+                        kpi["value"],
+                        kpi.get("delta"),
+                        help=kpi.get("help", ""),
+                    )
+
+        st.markdown("---")
+
+        # ── Week-over-Week Trend ───────────────────────────────────────────────
+        city_names_bi = df_latest["city_display_name"].tolist()
+        city_slugs_bi = df_latest["city"].tolist()
+        slug_map_bi = dict(zip(city_names_bi, city_slugs_bi))
+
+        sel_col, _ = st.columns([1, 2])
+        with sel_col:
+            wow_city = st.selectbox("Select city for WoW trend:", city_names_bi, index=0)
+
+        wow_slug = slug_map_bi[wow_city]
+        wow_history = all_history[all_history["city"] == wow_slug] if not all_history.empty else pd.DataFrame()
+        st.plotly_chart(render_wow_trend_chart(wow_history, wow_city), use_container_width=True, config={"displayModeBar": False})
+
+        st.markdown("---")
+
+        # ── City Pollution Ranking Matrix ─────────────────────────────────────
+        st.markdown("#### 🏆 City Pollution Ranking Matrix")
+        st.markdown(
+            "Sortable executive table ranking cities by AQI, peak pollution, "
+            "PM2.5 concentration, combustion ratio, and WHO limit exceedance hours."
+        )
+        matrix = render_city_ranking_matrix(df_latest, all_history)
+        if not matrix.empty:
+            st.dataframe(matrix, use_container_width=True, hide_index=True)
+        else:
+            st.info("Insufficient data for ranking matrix.")
+
+        st.markdown("---")
+
+        # ── Existing Diagnostic Row 1: Ranking + PM Ratio ─────────────────────
         c1, c2 = st.columns([1, 1])
         with c1:
             st.plotly_chart(render_city_ranking_chart(df_latest), use_container_width=True, config={"displayModeBar": False})
@@ -419,23 +475,21 @@ def main():
 
         with c2:
             st.plotly_chart(render_pm_ratio_chart(df_latest), use_container_width=True, config={"displayModeBar": False})
-            st.caption("Diagnostic indicator: Ratios >0.6 indicate combustion smog; <0.4 indicate road/construction dust.")
+            st.caption("Diagnostic: ratios >0.6 indicate combustion smog; <0.4 indicate road/construction dust.")
 
         st.markdown("---")
 
-        # Row 2: Diurnal Rhythm + Anomaly Detection
+        # ── Existing Diagnostic Row 2: Diurnal + Anomaly ───────────────────────
         c3, c4 = st.columns([1, 1])
         with c3:
-            # Query recent history for Ahmedabad or first city to show diurnal pattern
             sample_city = df_latest.iloc[0]["city"]
             history_df = get_city_history(engine, sample_city, limit=48)
             st.plotly_chart(render_diurnal_pattern_chart(history_df), use_container_width=True, config={"displayModeBar": False})
-            st.caption(f"Diurnal hourly pattern for {df_latest.iloc[0]['city_display_name']} showing diurnal spikes.")
+            st.caption(f"Diurnal hourly pattern for {df_latest.iloc[0]['city_display_name']}.")
 
         with c4:
             st.markdown("#### ⚡ Statistical Spike & Anomaly Detection")
-            st.markdown("Uses Z-Score standardization ($Z = \\frac{X - \\mu}{\\sigma}$) to detect sudden pollutant surges across stations.")
-            
+            st.markdown("Uses Z-Score standardization ($Z = \\frac{X - \\mu}{\\sigma}$) to detect sudden pollutant surges.")
             anomalies = detect_zscore_anomalies(df_latest)
             if anomalies:
                 for a in anomalies:

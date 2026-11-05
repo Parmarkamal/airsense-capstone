@@ -1,0 +1,7 @@
+CityKey,CitySlug,CityName,State,Tier,TierNumber,Latitude,Longitude,Country
+1,ahmedabad,Ahmedabad,Gujarat,Tier 2,2,23.0225,72.5714,IN
+2,bengaluru,Bengaluru,Karnataka,Tier 1,1,12.9716,77.5946,IN
+3,pune,Pune,Maharashtra,Tier 2,2,18.5204,73.8567,IN
+4,gandhinagar,Gandhinagar,Gujarat,Tier 3,3,23.2156,72.6369,IN
+5,delhi,Delhi,Delhi NCR,Tier 1,1,28.6139,77.209,IN
+6,mumbai,Mumbai,Maharashtra,Tier 1,1,19.076,72.8777,IN
