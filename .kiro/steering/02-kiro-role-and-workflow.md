@@ -29,3 +29,4 @@
   - Pydantic v2 schema compliance.
   - Logging and error handling standards.
 - Run `python -m pytest tests/` to confirm 100% test pass rate.
+

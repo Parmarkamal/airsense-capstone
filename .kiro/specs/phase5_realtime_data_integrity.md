@@ -38,3 +38,4 @@ Eliminate stale data (e.g. Ahmedabad, Mumbai, Pune, Gandhinagar WAQI feeds that 
 - [ ] No Pydantic validation errors in Kafka consumer.
 - [ ] All 32 existing tests in `pytest tests/` continue to pass.
 - [ ] New unit test `tests/test_hybrid_fetch.py` passes with mocked WAQI and Open-Meteo responses.
+

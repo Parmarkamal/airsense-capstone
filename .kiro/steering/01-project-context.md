@@ -17,3 +17,4 @@
 - All code in `airsense/` for Phases 1 to 4 is **100% complete and verified with 32/32 passing tests**.
 - **DO NOT** rewrite, rename, refactor, or delete existing files from Phases 1–4.
 - All 32 tests in `tests/` MUST continue passing after any new change.
+

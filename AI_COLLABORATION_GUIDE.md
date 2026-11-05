@@ -86,3 +86,4 @@ If Cursor or Kiro ever makes an error, modifies the wrong file, or tests fail:
 git reset --hard HEAD
 ```
 Your codebase will instantly return to the 100% working baseline (32/32 tests passing) in 1 second.
+
