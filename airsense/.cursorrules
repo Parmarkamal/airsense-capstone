@@ -17,19 +17,26 @@
     * Phase 4: RAG Health Advisory system (ChromaDB + Ollama) (COMPLETE).
 - NEVER refactor, delete, or break working code from Phases 1 to 4.
 
-# 3. FEATURE-BATCH WORKFLOW (EFFICIENT MILESTONES)
-- Do NOT waste time running the full 80-second test suite after every single minor line change.
-- Work in **Cohesive Feature Batches** (30% to 50% of a phase at a time):
-    1. Implement the interconnected files that make up a logical feature (e.g. Ingestion + Daemon, or Data Access + UI Badges).
-    2. Run a fast, targeted verification (e.g., run the single fetch script or target test).
-    3. At the 50% and 100% milestone of each phase, run the full test suite:
-       python -m pytest tests/
-    4. Commit clean milestone to Git.
+# 3. PHASE-BY-PHASE AUTONOMOUS PROGRESSION (NO NEW INSTRUCTIONS NEEDED)
+All specifications for remaining phases are ALREADY pre-authored in `.kiro/specs/`:
+- Phase 5: `../.kiro/specs/phase5_realtime_data_integrity.md` (Active)
+- Phase 6: `../.kiro/specs/phase6_ai_safety_guardrails.md`
+- Phase 7: `../.kiro/specs/phase7_ml_baselines_shap.md`
+- Phase 8: `../.kiro/specs/phase8_offline_demo_replay.md`
+- Phase 9: `../.kiro/specs/phase9_bi_analytics_powerbi.md`
+- Phase 10: `../.kiro/specs/phase10_observability_viva_defense.md`
 
-# 4. SINGLE SOURCE OF TRUTH & SPECS
-- Master Progress Tracker: '../AirSense_Project_Status.md'.
-- Active Task Spec: '../.kiro/specs/phase5_realtime_data_integrity.md'.
-- All progress and status updates must be tracked in 'AirSense_Project_Status.md'. Do NOT create new loose markdown files.
+When a phase is completed and verified:
+1. Run `python -m pytest tests/` to confirm 100% pass rate.
+2. Commit changes with `feat: complete Phase X`.
+3. Proceed directly to the next phase specification file without stopping or waiting for new instructions.
+
+# 4. WORKFLOW: COMPLETE FULL PHASE, THEN TEST & COMMIT
+- Do NOT test after every single file.
+- Implement the full set of interconnected files for the active phase.
+- Run a targeted verification script (takes 2-3 seconds).
+- Once the phase is complete, run the full test suite (`python -m pytest tests/`) and verify the Streamlit dashboard.
+- Commit to Git and advance to the next phase.
 
 # 5. ENVIRONMENT SPECIFICATIONS (WINDOWS LAPTOP)
 - OS: Windows 11
@@ -40,5 +47,5 @@
 - Memory: Respect laptop RAM limits (8GB/16GB). Zero cloud costs.
 
 # 6. DISASTER RECOVERY
-- If a batch introduces breaking changes or tests fail, simply run:
+- If any phase introduces breaking changes or tests fail, run:
     git reset --hard HEAD
