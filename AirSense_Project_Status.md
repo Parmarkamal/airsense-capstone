@@ -49,7 +49,7 @@ Phase 5: Real-Time Data Integrity & Live Truth  [██████████�
 Phase 6: Grounded AI Safety & Domain Guardrails [████████████████████] 100% ✅ COMPLETE (50/50 Tests)
 Phase 7: ML Explainability (SHAP) & Baselines   [████████████████████] 100% ✅ COMPLETE (60/60 Tests)
 Phase 8: Offline Resilience & Demo Replay Mode  [████████████████████] 100% ✅ COMPLETE (78/78 Tests)
-Phase 9: Business Intelligence (BI & Power BI)  [████████████░░░░░░░░]  60% ⏳ NEXT SPRINT
+Phase 9: Business Intelligence (BI & Power BI)  [████████████████████] 100% ✅ COMPLETE (85/85 Tests)
 Phase 10: System Observability & Viva Readiness [░░░░░░░░░░░░░░░░░░░░]   0% ⏳ FINAL SPRINT
 ```
 
@@ -142,11 +142,12 @@ Pune           18.5204° N, 73.8567° E   2026-10-30 17:00 IST    118      23.6 
 - **Tests:** Added 18 unit tests in `tests/test_replay.py` covering timestamp shifting, rate limiting, and Kafka delivery.
 
 ### PHASE 9: Business Intelligence & Executive Reporting
-**Status:** `⏳ 60% COMPLETE (Priority 5)`
-- **Task 9.1:** Complete Live Streamlit Business Analytics Tab (league rank, WoW % change, diurnal heatmap).
-- **Task 9.2:** Document Power BI TimescaleDB DirectQuery Connection (`docs/powerbi_setup.md`).
-- **Task 9.3:** Author 5 Core Enterprise DAX Measures (AQI Category, WoW % Change, 7-Day Moving Avg, Combustion Ratio, City Rank).
-- **Task 9.4 (NEW BEAST UPGRADE):** **Kimball Star Schema Architecture**: Model formal dimensional tables (`Dim_City`, `Dim_Date`, `Dim_Time`, `Dim_Pollutant_Standards`, `Fact_AQI_Readings`) for executive BI defense.
+**Status:** `✅ 100% COMPLETE (85/85 Tests Passing)`
+- **Task 9.1:** Completed Live Streamlit Business Intelligence Tab (Executive scorecard, WoW % change, sortable ranking matrix, diurnal curve, and particulate ratio).
+- **Task 9.2:** Documented Power BI TimescaleDB DirectQuery Connection in `docs/powerbi_setup.md`.
+- **Task 9.3:** Authored 5 Core Enterprise DAX Measures (AQI Category, WoW % Change, Combustion Index, WHO Exceedance Hours, 7-Day Moving Avg).
+- **Task 9.4:** **Kimball Star Schema Architecture**: Created automated ETL exporter `scripts/export_powerbi_data.py` generating `dim_city.csv`, `dim_date.csv`, `dim_time.csv`, and `fact_aqi_readings.csv`.
+- **Tests:** Added 7 unit tests in `tests/test_bi_export.py` verifying Star Schema referential integrity, surrogate key mapping, and non-empty exports.
 
 ### PHASE 10: System Observability & Viva Defense Readiness
 **Status:** `⏳ PLANNED (Priority 6 — Final Polish)`
