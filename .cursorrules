@@ -1,0 +1,41 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# AIRSENSE — CURSOR AI MASTER DEVELOPMENT RULES
+# ─────────────────────────────────────────────────────────────────────────────
+
+# 1. PROJECT PRESERVATION RULES (CRITICAL)
+- This is the EXISTING AirSense M.Sc. IT (Business Intelligence & Analytics) Capstone project.
+- DO NOT rebuild this project from scratch.
+- DO NOT create duplicate folders, replacement apps, or new repositories.
+- PHASES 1 TO 4 ARE 100% COMPLETE AND PASS 32/32 PYTEST TESTS:
+    * Phase 1: Real-time Kafka + TimescaleDB streaming pipeline (COMPLETE).
+    * Phase 2: Streamlit 5-view visual analytics & Leaflet GIS map (COMPLETE).
+    * Phase 3: LightGBM 48-hour forecasting engine (RMSE 7.61, MLflow) (COMPLETE).
+    * Phase 4: RAG Health Advisory system (ChromaDB + Ollama) (COMPLETE).
+- NEVER refactor, delete, or break working code from Phases 1 to 4.
+
+# 2. SINGLE SOURCE OF TRUTH
+- Read 'AirSense_Project_Status.md' before implementing any task.
+- It contains the complete 10-phase architecture, 40-question viva defense audit, test commands, and cold-start sequence.
+- All progress and status updates must be tracked in 'AirSense_Project_Status.md'. Do NOT create new markdown files.
+
+# 3. ENVIRONMENT SPECIFICATIONS (WINDOWS LAPTOP)
+- OS: Windows 11
+- Python: 3.11.x
+- TimescaleDB: Docker container on port 5433 (NOT 5432 — native Postgres is on 5432).
+- Kafka Broker: Localhost on port 9092.
+- Ollama LLM: Localhost on port 11434.
+- Memory: Respect 8GB/16GB laptop limits. Never run heavy GPU models.
+
+# 4. CURRENT IMMEDIATE TASK (START HERE)
+- Task: Phase 5, Task 5.1 — Smart Hybrid Ingestion in 'airsense/ingestion/fetch_aqi.py':
+    * Query WAQI API first.
+    * If WAQI station timestamp is older than 2 hours or unavailable (which happens for Ahmedabad, Mumbai, Pune, Bengaluru on WAQI), automatically query Open-Meteo Air Quality API with city GPS coordinates.
+    * Transparently tag data source ('WAQI' or 'Open-Meteo-Live').
+    * Ensure 100% of all 6 cities return fresh hourly readings matching Google AQI right now.
+
+# 5. TESTING & VERIFICATION REQUIREMENTS
+- Work on ONE file at a time.
+- After every code modification, run the automated test suite:
+    python -m pytest tests/
+- Verify all 32 tests pass before declaring any task complete.
+- Never claim code works without running terminal verification.

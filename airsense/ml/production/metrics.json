@@ -1,0 +1,32 @@
+{
+  "promoted_at": "2026-10-23T15:32:07.389642+00:00",
+  "model_version": "lgbm_v1",
+  "rmse": 7.61,
+  "mae": 5.77,
+  "r2": 0.961,
+  "directional_accuracy": 94.7,
+  "top_features": [
+    {
+      "feature": "aqi_lag_1h",
+      "importance": 1274
+    },
+    {
+      "feature": "aqi_lag_168h",
+      "importance": 782
+    },
+    {
+      "feature": "aqi_rolling_std_6h",
+      "importance": 671
+    },
+    {
+      "feature": "aqi_lag_24h",
+      "importance": 650
+    },
+    {
+      "feature": "aqi_rolling_mean_24h",
+      "importance": 632
+    }
+  ],
+  "mlflow_run_id": "b2a22dfc71034cefb3545da8a6e5f4d3",
+  "promotion_threshold": 30.0
+}

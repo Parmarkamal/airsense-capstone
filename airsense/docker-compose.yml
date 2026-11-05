@@ -1,0 +1,56 @@
+version: "3.9"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# AirSense — Docker Compose
+# Week 2: TimescaleDB only (strict 512 MB memory cap for 16 GB laptop)
+#
+# Start:  docker compose up -d
+# Stop:   docker compose down
+# Logs:   docker compose logs -f timescaledb
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+  timescaledb:
+    image: timescale/timescaledb:latest-pg16
+    container_name: airsense_timescaledb
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB:       ${POSTGRES_DB:-airsense_db}
+      POSTGRES_USER:     ${POSTGRES_USER:-airsense}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me_locally}
+
+    ports:
+      - "5433:5432"
+
+    volumes:
+      - timescaledb_data:/var/lib/postgresql/data
+      # Automatically run init_db.sql on first container creation
+      - ./scripts/init_db.sql:/docker-entrypoint-initdb.d/01_init_db.sql:ro
+
+    # Hard memory cap — DO NOT remove this on a 16 GB laptop
+    mem_limit: 512m
+    mem_reservation: 256m
+
+    # Tune PostgreSQL for low memory
+    command: >
+      postgres
+        -c shared_buffers=128MB
+        -c effective_cache_size=256MB
+        -c work_mem=4MB
+        -c maintenance_work_mem=32MB
+        -c max_connections=20
+        -c log_min_duration_statement=1000
+        -c log_timezone=Asia/Kolkata
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-airsense} -d ${POSTGRES_DB:-airsense_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+volumes:
+  timescaledb_data:
+    name: airsense_timescaledb_data
+

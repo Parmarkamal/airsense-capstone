@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AirSense — Final Verified Roadmap</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    :root {
+      --bg: #ffffff;
+      --text: #1f2937;
+      --heading: #111827;
+      --accent: #2563eb;
+      --accent-light: #eff6ff;
+      --border: #e5e7eb;
+      --green: #059669;
+      --orange: #d97706;
+      --muted: #6b7280;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 10.5pt;
+      line-height: 1.6;
+      padding: 0;
+      margin: 0;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    .container {
+      max-width: 850px;
+      margin: 0 auto;
+      padding: 40px;
+    }
+
+    /* Print settings */
+    @page {
+      size: A4;
+      margin: 20mm;
+    }
+    @media print {
+      body { font-size: 10pt; }
+      .container { padding: 0; }
+      .page-break { page-break-before: always; }
+      .no-break { page-break-inside: avoid; }
+      h2 { page-break-after: avoid; }
+      table { page-break-inside: auto; }
+      tr { page-break-inside: avoid; page-break-after: auto; }
+      .week-card { page-break-inside: avoid; }
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      padding-bottom: 25px;
+      border-bottom: 3px solid var(--accent);
+      margin-bottom: 35px;
+    }
+    .header-icon {
+      font-size: 40px;
+      margin-bottom: 10px;
+      display: block;
+    }
+    .header h1 {
+      font-size: 2.4rem;
+      color: var(--heading);
+      margin-bottom: 8px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+    .header h3 {
+      font-size: 1.2rem;
+      color: var(--accent);
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+    .header p {
+      font-size: 1.1rem;
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    /* Sections */
+    h2 {
+      font-size: 1.4rem;
+      color: var(--accent);
+      margin-top: 35px;
+      margin-bottom: 15px;
+      padding-bottom: 5px;
+      border-bottom: 1px solid var(--border);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    h3 {
+      font-size: 1.1rem;
+      color: var(--heading);
+      margin-top: 25px;
+      margin-bottom: 10px;
+    }
+    p {
+      margin-bottom: 15px;
+    }
+    ul {
+      margin-bottom: 15px;
+      padding-left: 20px;
+    }
+    li {
+      margin-bottom: 6px;
+    }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 25px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    th, td {
+      padding: 10px 14px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    th {
+      background-color: #f8fafc;
+      color: var(--heading);
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+    tr:last-child td {
+      border-bottom: none;
+    }
+    td:first-child {
+      font-weight: 600;
+      color: var(--heading);
+      background-color: #f8fafc;
+      width: 25%;
+    }
+
+    /* Code block for Architecture */
+    .arch-block {
+      background-color: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      white-space: pre;
+      overflow-x: auto;
+      color: #334155;
+      margin-bottom: 25px;
+      line-height: 1.4;
+    }
+
+    /* Week Cards */
+    .timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    .phase-title {
+      font-weight: 700;
+      color: var(--accent);
+      margin: 20px 0 10px 0;
+      font-size: 1.1rem;
+      border-bottom: 1px dashed var(--border);
+      padding-bottom: 5px;
+    }
+    .week-card {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 15px;
+      background: #fdfdfd;
+      border-left: 4px solid var(--accent);
+    }
+    .week-card h4 {
+      font-size: 1.05rem;
+      color: var(--heading);
+      margin-bottom: 8px;
+    }
+    .week-card ul {
+      margin-bottom: 10px;
+      color: #475569;
+    }
+    .checkpoint {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      color: #166534;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+  </style>
+</head>
+<body>
+
+<div class="container">
+  
+  <div class="header">
+    <span class="header-icon">🌬️</span>
+    <h1>AirSense — Final Verified Roadmap</h1>
+    <h3>Real-Time AQI Forecasting & Private GenAI Health Advisor</h3>
+    <p>Built 100% on a single laptop – no cloud, no credit card</p>
+  </div>
+
+  <h2>1. Project Identity & Why This Exists</h2>
+  <table>
+    <tr>
+      <td>Project Name</td>
+      <td>AirSense</td>
+    </tr>
+    <tr>
+      <td>Tagline</td>
+      <td><em>Know the air. Protect your health.</em></td>
+    </tr>
+    <tr>
+      <td>One-liner</td>
+      <td>A laptop-only system that pulls live air-quality data every hour, predicts the next 48 hours, and gives a local, private AI health advisor that never hallucinates because it is chained to official WHO/CPCB guidelines.</td>
+    </tr>
+    <tr>
+      <td>Domain</td>
+      <td>Data Engineering, Data Science, Generative AI</td>
+    </tr>
+    <tr>
+      <td>Your Machine</td>
+      <td>Acer Nitro V15 (16 GB RAM, Windows 11, dedicated GPU)</td>
+    </tr>
+    <tr>
+      <td>Existing Setup</td>
+      <td>Apache Kafka with ZooKeeper already running on <code>localhost:9092</code> – we use it exactly as is</td>
+    </tr>
+    <tr>
+      <td>Time & Budget</td>
+      <td>12 weeks, 7-10 h/week | <strong>₹0</strong> (all tools free and open-source)</td>
+    </tr>
+    <tr>
+      <td>Privacy</td>
+      <td>100% local – no health question ever leaves the laptop</td>
+    </tr>
+  </table>
+
+  <h2>2. The Real-World Problem</h2>
+  <p>Air pollution kills 7 million people every year. India has 14 of the world’s 20 most polluted cities. Yet a normal person only sees a raw AQI number – they don’t know:</p>
+  <ul>
+    <li>What the number means for <strong>their</strong> specific health (asthma, child, elderly)</li>
+    <li>Whether tomorrow morning will be safer or worse</li>
+    <li>What simple actions they can take right now</li>
+  </ul>
+  <p><strong>AirSense changes that.</strong> It turns raw sensor data into <strong>personalised, forward-looking, private health advice</strong> – entirely on a laptop, without the internet after initial data pull.</p>
+
+  <h2>3. Full Technology Stack</h2>
+  <table>
+    <tr>
+      <th>Layer</th>
+      <th>Tool</th>
+      <th>Why This, Not the Alternative</th>
+    </tr>
+    <tr>
+      <td>Live Data</td>
+      <td>WAQI/AQICN API</td>
+      <td>Covers 1,000+ Indian cities, official CPCB/US embassy data. Token is free and instant.</td>
+    </tr>
+    <tr>
+      <td>Message Broker</td>
+      <td>Apache Kafka</td>
+      <td>Already running (ZooKeeper + broker). Decouples fetch from processing, production-grade.</td>
+    </tr>
+    <tr>
+      <td>Stream Consumer</td>
+      <td>Python (confluent-kafka)</td>
+      <td>Reads from Kafka, validates, writes to DB. Clean and lightweight.</td>
+    </tr>
+    <tr>
+      <td>Data Validation</td>
+      <td>Pydantic v2</td>
+      <td>Fast, catches bad API readings before they reach the database.</td>
+    </tr>
+    <tr>
+      <td>Time-Series DB</td>
+      <td>TimescaleDB</td>
+      <td>Built on PostgreSQL. Hypertables give fast queries on millions of rows.</td>
+    </tr>
+    <tr>
+      <td>ML Forecasting</td>
+      <td>LightGBM</td>
+      <td>Installs simply, trains in seconds, excellent accuracy on tabular time-series.</td>
+    </tr>
+    <tr>
+      <td>Experiment Tracking</td>
+      <td>MLflow</td>
+      <td>Logs training runs, RMSE, parameters. Local file store, no server needed.</td>
+    </tr>
+    <tr>
+      <td>RAG Knowledge Base</td>
+      <td>ChromaDB + MiniLM</td>
+      <td>Runs in-process. Embedding model is 22 MB and works fully offline.</td>
+    </tr>
+    <tr>
+      <td>Local LLM</td>
+      <td>Ollama + phi3:mini</td>
+      <td>Uses ~2.5 GB VRAM – fits perfectly on RTX 2050 GPU.</td>
+    </tr>
+    <tr>
+      <td>AI Framework</td>
+      <td>LangChain</td>
+      <td>Connects the LLM to ChromaDB and TimescaleDB.</td>
+    </tr>
+    <tr>
+      <td>Dashboard & Map</td>
+      <td>Streamlit + Folium</td>
+      <td>Python-native. Handles live gauges, charts, interactive map, and chat easily.</td>
+    </tr>
+    <tr>
+      <td>BI Reporting</td>
+      <td>Power BI Desktop</td>
+      <td>Connects to TimescaleDB. Professional DAX measures.</td>
+    </tr>
+    <tr>
+      <td>Orchestration</td>
+      <td>Task Scheduler</td>
+      <td>Runs the API fetch every hour, retrains model weekly. Built-in to Windows.</td>
+    </tr>
+    <tr>
+      <td>Alerts</td>
+      <td>Telegram Bot API</td>
+      <td>40 lines of Python – sends phone notification when AQI spikes. Free.</td>
+    </tr>
+  </table>
+
+  <div class="page-break"></div>
+
+  <h2>4. Hardware Reality & RAM Budget</h2>
+  <p><strong>WSL2 memory cap (NON-NEGOTIABLE):</strong> Before touching Docker, you must create <code>C:\Users\YourName\.wslconfig</code> with <code>memory=3GB</code> and restart WSL. This caps the VM at 3 GB.</p>
+  <table>
+    <tr>
+      <th>Component</th>
+      <th>RAM Allocation</th>
+    </tr>
+    <tr>
+      <td>Windows 11 + background</td>
+      <td>~3.5 GB</td>
+    </tr>
+    <tr>
+      <td>WSL2 VM (capped) – TimescaleDB</td>
+      <td>≤ 3.0 GB</td>
+    </tr>
+    <tr>
+      <td>ZooKeeper + Kafka (JVMs tuned)</td>
+      <td>~1.2 GB</td>
+    </tr>
+    <tr>
+      <td>Python (consumer + Streamlit + LangChain)</td>
+      <td>1.5–2.5 GB</td>
+    </tr>
+    <tr>
+      <td>Ollama + phi3:mini loaded</td>
+      <td>~1.5 GB system + ~2.5 GB VRAM</td>
+    </tr>
+    <tr>
+      <td>VS Code + Chrome</td>
+      <td>1.5–2.5 GB</td>
+    </tr>
+    <tr>
+      <td><strong>Peak Total (Demo Conditions)</strong></td>
+      <td><strong>~11.5–13.5 GB</strong></td>
+    </tr>
+  </table>
+  <p><em>Safety Net: Increase the Windows pagefile to 8–16 GB to prevent crashes if memory spikes.</em></p>
+
+  <h2>5. High-Level System Architecture</h2>
+  <div class="arch-block">[WAQI API – Internet]  
+        │  (every hour, Task Scheduler)  
+        ▼  
+[Apache Kafka – topic "aqi_raw"] (your existing ZooKeeper + broker)  
+        │  (real-time, continuous consumer)  
+        ▼  
+[Pydantic validation]  
+   ├── VALID ──────────▶ [TimescaleDB hypertable "aqi_readings"]  
+   └── INVALID ────────▶ [error log]  
+                │  
+     ┌──────────┼──────────┐  
+     │          │          │  
+     ▼          ▼          ▼  
+[LightGBM]  [Streamlit]  [ChromaDB (WHO/CPCB PDFs)]  
+(weekly)    (dashboard)        │  
+     │          │        [LangChain agent]  
+     ▼          │              │  
+[aqi_forecasts] │              ▼  
+     │          │    [Ollama phi3:mini]  
+     └──────────┤              │  
+                ▼              ▼  
+     [Live gauges, forecast, map, chat]  
+                │  
+                ▼  
+[Power BI Desktop – reports] & [Telegram Bot – alerts]</div>
+  <p><strong>Note:</strong> All connections are localhost. The only external call is the hourly WAQI API fetch.</p>
+
+  <div class="page-break"></div>
+
+  <h2>6. 12-Week Roadmap (Precise, Week-by-Week)</h2>
+  
+  <div class="timeline">
+    <div class="phase-title">PHASE 1 – DATA FOUNDATION (Weeks 1-2)</div>
+    <div class="week-card">
+      <h4>Week 1 – Live Data Flows into Kafka</h4>
+      <ul>
+        <li>Register free WAQI token. Create Kafka topic <code>aqi_raw</code>.</li>
+        <li>Write Python script <code>fetch_aqi.py</code> to call WAQI API and publish JSON to Kafka.</li>
+        <li>Schedule script in Windows Task Scheduler (hourly).</li>
+      </ul>
+      <div class="checkpoint">✓ Checkpoint: Open Kafka console consumer – see new AQI messages arriving hourly.</div>
+    </div>
+    <div class="week-card">
+      <h4>Week 2 – Clean Data Accumulates in TimescaleDB</h4>
+      <ul>
+        <li>Create <code>.wslconfig</code>. Start TimescaleDB via Docker Compose.</li>
+        <li>Create hypertable <code>aqi_readings</code>.</li>
+        <li>Write Python Kafka consumer with Pydantic validation to insert valid rows into DB.</li>
+      </ul>
+      <div class="checkpoint">✓ Checkpoint: Run SQL query – rows grow every hour.</div>
+    </div>
+
+    <div class="phase-title">PHASE 2 – VISUALISATION (Weeks 3-4)</div>
+    <div class="week-card">
+      <h4>Week 3 – First Live Dashboard</h4>
+      <ul>
+        <li>Build Streamlit app: City selector, AQI gauges, 24-hour line chart.</li>
+        <li>Set auto-refresh to 60 seconds.</li>
+      </ul>
+      <div class="checkpoint">✓ Checkpoint: Open localhost:8501 – live gauges update automatically.</div>
+    </div>
+    <div class="week-card">
+      <h4>Week 4 – Insights & India Map</h4>
+      <ul>
+        <li>Jupyter EDA: Diurnal patterns, Z-score spikes.</li>
+        <li>Add Folium interactive India map to Streamlit.</li>
+      </ul>
+      <div class="checkpoint">✓ Checkpoint: Map shows red/orange/green bubbles. Click city for AQI.</div>
+    </div>
+
+    <div class="phase-title">PHASE 3 – FORECASTING (Weeks 5-6)</div>
+    <div class="week-card">
+      <h4>Week 5 – Train the ML Model</h4>
+      <ul>
+        <li>Engineer lag features, rolling means. Train LightGBM with walk-forward validation.</li>
+        <li>Log to MLflow. Save 48-hour forecasts to DB.</li>
+      </ul>
+      <div class="checkpoint">✓ Checkpoint: MLflow UI shows run; RMSE < 30 AQI units.</div>
+    </div>
+    <div class="week-card">
+      <h4>Week 6 – Forecast Appears on Dashboard</h4>
+      <ul>
+        <li>Add chart combining actual AQI (solid) and predicted (dashed).</li>
+      </ul>
+      <div class="checkpoint">✓ Checkpoint: Chart clearly shows where AQI is heading next 48 hours.</div>
+    </div>
+
+    <div class="phase-title">PHASE 4 – AI HEALTH ADVISOR (Weeks 7-8)</div>
+    <div class="week-card">
+      <h4>Week 7 – Build the Knowledge Base</h4>
+      <ul>
+        <li>Chunk WHO/CPCB PDFs. Embed with MiniLM. Store in ChromaDB.</li>
+      </ul>
+      <div class="checkpoint">✓ Checkpoint: Test query returns relevant WHO paragraphs.</div>
+    </div>
+    <div class="week-card">
+      <h4>Week 8 – Safe, Grounded AI Chat</h4>
+      <ul>
+        <li>Build LangChain agent with tools: Get AQI + Search Guidelines. Connect to Ollama (phi3:mini).</li>
+        <li>Add strict system prompt (no diagnoses, must cite).</li>
+      </ul>
+      <div class="checkpoint">✓ Checkpoint: AI gives cited, offline answers with medical disclaimers.</div>
+    </div>
+
+    <div class="phase-title">PHASE 5 – POLISH & REPORTS (Weeks 9-10)</div>
+    <div class="week-card">
+      <h4>Week 9 – Professional Unified App</h4>
+      <ul>
+        <li>Organise Streamlit tabs. Add AI kill-switch and disclaimers.</li>
+      </ul>
+      <div class="checkpoint">✓ Checkpoint: App is polished; kill-switch disables AI seamlessly.</div>
+    </div>
+    <div class="week-card">
+      <h4>Week 10 – Power BI Executive Reports</h4>
+      <ul>
+        <li>Connect Power BI to TimescaleDB. Create DAX measures.</li>
+      </ul>
+      <div class="checkpoint">✓ Checkpoint: Two-page executive report fully functional.</div>
+    </div>
+
+    <div class="phase-title">PHASE 6 – AUTOMATION & DEMO HARDENING (Weeks 11-12)</div>
+    <div class="week-card">
+      <h4>Week 11 – MLOps & Phone Alerts</h4>
+      <ul>
+        <li>Python retraining script (champion-challenger) scheduled weekly.</li>
+        <li>Telegram bot for AQI spike alerts.</li>
+      </ul>
+      <div class="checkpoint">✓ Checkpoint: Manually trigger spike – phone buzzes.</div>
+    </div>
+    <div class="week-card">
+      <h4>Week 12 – Stress Test & Demo Prep</h4>
+      <ul>
+        <li>24-hour test. Test backup scenarios. Create <code>start_demo.bat</code>.</li>
+      </ul>
+      <div class="checkpoint">✓ Checkpoint: System survives all failure tests; ready for defense.</div>
+    </div>
+  </div>
+
+  <div class="page-break"></div>
+
+  <h2>7. Skills Mapped to Job Roles</h2>
+  <table>
+    <tr>
+      <th>Role</th>
+      <th>Skills Gained</th>
+    </tr>
+    <tr>
+      <td>Data Engineer</td>
+      <td>Kafka topic design, Pydantic, TimescaleDB hypertables, Docker/WSL2, Task Scheduler orchestration</td>
+    </tr>
+    <tr>
+      <td>Data Scientist</td>
+      <td>Time-series feature engineering, walk-forward validation, LightGBM training, RMSE evaluation, EDA</td>
+    </tr>
+    <tr>
+      <td>MLOps Engineer</td>
+      <td>MLflow experiment tracking, champion-challenger promotion, automated weekly retraining</td>
+    </tr>
+    <tr>
+      <td>AI/GenAI Engineer</td>
+      <td>RAG architecture, ChromaDB, local LLM (Ollama), LangChain agent, safety prompt engineering</td>
+    </tr>
+    <tr>
+      <td>Data Analyst</td>
+      <td>Streamlit dashboards, Plotly/Folium Maps, Power BI with DAX</td>
+    </tr>
+    <tr>
+      <td>Software Engineer</td>
+      <td>Modular structure, RAM budgeting, fallback strategies, Git hygiene</td>
+    </tr>
+  </table>
+
+  <h2>8. Demo Day Backup Strategy (3 Layers)</h2>
+  <ol>
+    <li><strong>Internet down / API fails:</strong> Click "Replay Mode". Pre-loaded 7-day CSV feeds Kafka. System works identically.</li>
+    <li><strong>Ollama crashes / OOM:</strong> Toggle kill-switch. Chat hides, dashboard survives. Show pre-generated chat screenshots.</li>
+    <li><strong>Docker fails:</strong> Show static dashboard/Power BI screenshots and play a 5-minute pre-recorded demo video.</li>
+  </ol>
+
+  <h2>9. Risk Assessment</h2>
+  <table>
+    <tr>
+      <th>Risk</th>
+      <th>Impact</th>
+      <th>Mitigation</th>
+    </tr>
+    <tr>
+      <td>WSL2 consumes too much RAM</td>
+      <td>System Crash</td>
+      <td><code>.wslconfig</code> created in Week 0 – mandatory step.</td>
+    </tr>
+    <tr>
+      <td>WAQI API downtime</td>
+      <td>Live Data Stops</td>
+      <td>Replay mode with 7-day backup CSV.</td>
+    </tr>
+    <tr>
+      <td>LangChain version conflict</td>
+      <td>Import Errors</td>
+      <td>Pin exact versions in <code>requirements.txt</code> from Day 1.</td>
+    </tr>
+  </table>
+
+  <h2>10. Final Verdict</h2>
+  <p><strong>AirSense is the most complete, realistic, and recruiter-ready capstone you can build on a single laptop.</strong> It solves a massive Indian problem with real-time data, ML, and private GenAI. It respects your existing Kafka setup and hardware limits, and features a bulletproof backup plan. <em>Probability of successful completion: 90%+</em></p>
+
+</div>
+
+</body>
+</html>

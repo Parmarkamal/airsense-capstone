@@ -1,0 +1,70 @@
+# AirSense — central configuration
+# Add cities here without changing Python code.
+
+kafka:
+  bootstrap_servers: "localhost:9092"
+  topic_raw: "aqi_raw"
+  group_id: "airsense_consumer"
+  producer_acks: "all"
+  request_timeout_ms: 30000
+
+database:
+  host: "localhost"
+  port: 5433
+  name: "airsense_db"
+  user: "airsense"
+
+waqi:
+  base_url: "https://api.waqi.info/feed"
+  request_delay_seconds: 1.2
+  timeout_seconds: 30
+  cities:
+    - slug: ahmedabad
+      display_name: "Ahmedabad"
+      lat: 23.0225
+      lon: 72.5714
+    - slug: bengaluru
+      display_name: "Bengaluru"
+      lat: 12.9716
+      lon: 77.5946
+    - slug: pune
+      display_name: "Pune"
+      lat: 18.5204
+      lon: 73.8567
+    - slug: gandhinagar
+      display_name: "Gandhinagar"
+      lat: 23.2156
+      lon: 72.6369
+    - slug: delhi
+      display_name: "Delhi"
+      lat: 28.6139
+      lon: 77.2090
+    - slug: mumbai
+      display_name: "Mumbai"
+      lat: 19.0760
+      lon: 72.8777
+
+ollama:
+  base_url: "http://localhost:11434"
+  model: "phi3:mini"
+  timeout_seconds: 60
+
+chroma:
+  persist_directory: "data/chroma_db"
+  collection_name: "airsense_guidelines"
+
+ml:
+  training_weeks: 4
+  production_model_path: "ml/production/lgbm_aqi.pkl"
+  forecast_horizon_hours: 48
+  rmse_promotion_threshold: 30.0
+
+alerts:
+  aqi_spike_threshold: 200
+  enabled: false
+
+logging:
+  level: "INFO"
+  file: "logs/airsense.log"
+
+schema_version: "1.0"

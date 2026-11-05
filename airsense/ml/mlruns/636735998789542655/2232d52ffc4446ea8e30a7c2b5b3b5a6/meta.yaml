@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/STUDY/MSC_BI_Analytics/sem_03/capstone_project/airsense/ml/mlruns/636735998789542655/2232d52ffc4446ea8e30a7c2b5b3b5a6/artifacts
+end_time: 1792769455616
+entry_point_name: ''
+experiment_id: '636735998789542655'
+lifecycle_stage: active
+run_id: 2232d52ffc4446ea8e30a7c2b5b3b5a6
+run_name: lgbm_walkforward_20261023_1530
+run_uuid: 2232d52ffc4446ea8e30a7c2b5b3b5a6
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1792769452553
+status: 3
+tags: []
+user_id: parma

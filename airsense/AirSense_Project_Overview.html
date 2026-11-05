@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AirSense — Project Overview</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    :root {
+      --bg:        #0d1117;
+      --bg2:       #161b22;
+      --bg3:       #21262d;
+      --border:    #30363d;
+      --text:      #e6edf3;
+      --muted:     #8b949e;
+      --accent:    #58a6ff;
+      --green:     #3fb950;
+      --orange:    #f0883e;
+      --red:       #f85149;
+      --purple:    #d2a8ff;
+      --yellow:    #e3b341;
+      --teal:      #39d353;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 15px;
+      line-height: 1.7;
+    }
+
+    /* ── HEADER ── */
+    .hero {
+      background: linear-gradient(135deg, #0d1117 0%, #161b4a 50%, #0d1117 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 60px 40px 50px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 50% 0%, rgba(88,166,255,0.12) 0%, transparent 70%);
+    }
+    .hero-icon { font-size: 64px; display: block; margin-bottom: 16px; }
+    .hero h1 {
+      font-size: 3rem; font-weight: 800;
+      background: linear-gradient(135deg, #58a6ff, #79c0ff, #a5d6ff);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+    }
+    .hero-tagline {
+      font-size: 1.1rem; color: var(--muted); font-style: italic; margin-bottom: 20px;
+    }
+    .badges { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+    .badge {
+      padding: 4px 14px; border-radius: 20px; font-size: 12px; font-weight: 600;
+      border: 1px solid;x`
+    }
+    .badge-blue  { color: var(--accent);  border-color: var(--accent);  background: rgba(88,166,255,0.1); }
+    .badge-green { color: var(--green);   border-color: var(--green);   background: rgba(63,185,80,0.1); }
+    .badge-orange{ color: var(--orange);  border-color: var(--orange);  background: rgba(240,136,62,0.1); }
+    .badge-purple{ color: var(--purple);  border-color: var(--purple);  background: rgba(210,168,255,0.1); }
+
+    /* ── LAYOUT ── */
+    .container { max-width: 1100px; margin: 0 auto; padding: 40px 24px; }
+
+    /* ── SECTION ── */
+    .section { margin-bottom: 56px; }
+    .section-header {
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 24px; padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .section-num {
+      background: var(--accent); color: #000;
+      width: 32px; height: 32px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700; flex-shrink: 0;
+    }
+    .section-title { font-size: 1.4rem; font-weight: 700; color: var(--text); }
+
+    /* ── CARDS ── */
+    .card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 16px;
+    }
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    .card h3 { font-size: 1rem; font-weight: 600; color: var(--accent); margin-bottom: 10px; }
+    .card p  { color: var(--muted); font-size: 14px; line-height: 1.6; }
+
+    /* ── IDENTITY TABLE ── */
+    .identity-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .identity-item {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 10px; padding: 16px 20px;
+    }
+    .identity-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+    .identity-value { font-size: 15px; font-weight: 500; color: var(--text); }
+
+    /* ── TABLES ── */
+    .table-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid var(--border); }
+    table {
+      width: 100%; border-collapse: collapse;
+      font-size: 14px; background: var(--bg2);
+    }
+    th {
+      background: var(--bg3); color: var(--muted);
+      font-size: 11px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.07em;
+      padding: 12px 16px; text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    td { padding: 11px 16px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255,255,255,0.03); }
+    td:first-child { font-weight: 500; color: var(--text); white-space: nowrap; }
+    td:not(:first-child) { color: var(--muted); }
+
+    /* ── FLOW DIAGRAM ── */
+    .flow {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 12px; padding: 28px; overflow-x: auto;
+    }
+    .flow-row { display: flex; align-items: flex-start; gap: 0; margin-bottom: 0; }
+    .flow-box {
+      background: var(--bg3); border: 1px solid var(--accent);
+      border-radius: 8px; padding: 10px 18px;
+      font-size: 13px; font-weight: 500; white-space: nowrap;
+      min-width: 180px; text-align: center;
+    }
+    .flow-arrow {
+      color: var(--accent); font-size: 22px; margin: 0 8px; line-height: 38px;
+    }
+    .flow-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+    .flow-step {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 16px; background: var(--bg3);
+      border-radius: 8px; border-left: 3px solid var(--accent);
+    }
+    .flow-step-num {
+      background: var(--accent); color: #000;
+      width: 24px; height: 24px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; flex-shrink: 0;
+    }
+    .flow-step-text { font-size: 14px; color: var(--text); }
+    .flow-step-text span { color: var(--muted); font-size: 13px; display: block; }
+
+    /* ── PIPELINE VISUAL ── */
+    .pipeline {
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    .pipe-node {
+      background: var(--bg3); border: 1px solid var(--border);
+      border-radius: 8px; padding: 12px 20px;
+      display: flex; align-items: center; gap: 14px;
+      transition: border-color 0.2s;
+    }
+    .pipe-node:hover { border-color: var(--accent); }
+    .pipe-icon { font-size: 22px; width: 36px; text-align: center; }
+    .pipe-label { font-size: 14px; font-weight: 600; }
+    .pipe-desc  { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .pipe-arrow { text-align: center; color: var(--accent); font-size: 18px; line-height: 1; margin: 2px 0 2px 18px; }
+
+    /* ── WEEK TIMELINE ── */
+    .timeline { display: flex; flex-direction: column; gap: 16px; }
+    .week-card {
+      display: grid; grid-template-columns: 110px 1fr;
+      gap: 0; border: 1px solid var(--border);
+      border-radius: 10px; overflow: hidden; background: var(--bg2);
+    }
+    .week-label {
+      background: var(--bg3); padding: 16px;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; text-align: center;
+      border-right: 1px solid var(--border);
+    }
+    .week-num { font-size: 20px; font-weight: 800; color: var(--accent); }
+    .week-tag { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; }
+    .week-body { padding: 16px 20px; }
+    .week-goal { font-size: 13px; font-weight: 700; color: var(--green); margin-bottom: 6px; }
+    .week-desc { font-size: 13px; color: var(--muted); line-height: 1.6; }
+    .week-end  { font-size: 12px; color: var(--text); margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); }
+    .week-end::before { content: '✓ '; color: var(--green); font-weight: 700; }
+
+    /* ── SKILL GRID ── */
+    .skill-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 14px;
+    }
+    .skill-card {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 10px; padding: 18px;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .skill-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+    .skill-role {
+      font-size: 12px; font-weight: 700; color: var(--accent);
+      text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px;
+    }
+    .skill-list { list-style: none; }
+    .skill-list li { font-size: 13px; color: var(--muted); padding: 3px 0; }
+    .skill-list li::before { content: '→ '; color: var(--accent); }
+
+    /* ── VERDICT BOX ── */
+    .verdict {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px; padding: 24px; margin-bottom: 16px;
+    }
+    .verdict.ok    { border-left: 4px solid var(--green); }
+    .verdict.warn  { border-left: 4px solid var(--orange); }
+    .verdict.no    { border-left: 4px solid var(--red); }
+    .verdict-head  { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+    .verdict-icon  { font-size: 20px; }
+    .verdict-title { font-size: 15px; font-weight: 700; }
+    .verdict-body  { font-size: 13px; color: var(--muted); line-height: 1.7; }
+
+    /* ── STATUS PILLS ── */
+    .pill {
+      display: inline-block; padding: 2px 10px; border-radius: 12px;
+      font-size: 11px; font-weight: 600; margin-left: 6px; vertical-align: middle;
+    }
+    .pill-green  { background: rgba(63,185,80,0.15);  color: var(--green); }
+    .pill-orange { background: rgba(240,136,62,0.15); color: var(--orange); }
+    .pill-red    { background: rgba(248,81,73,0.15);  color: var(--red); }
+
+    /* ── SUMMARY BOX ── */
+    .summary-box {
+      background: linear-gradient(135deg, rgba(88,166,255,0.08), rgba(63,185,80,0.08));
+      border: 1px solid var(--accent); border-radius: 12px;
+      padding: 28px 32px; font-size: 15px; line-height: 1.9; color: var(--text);
+      font-style: italic;
+    }
+
+    /* ── FOOTER ── */
+    .footer {
+      text-align: center; padding: 40px 20px; color: var(--muted);
+      font-size: 12px; border-top: 1px solid var(--border);
+    }
+    .footer strong { color: var(--text); }
+
+    /* ── HELPERS ── */
+    .green { color: var(--green); }
+    .orange{ color: var(--orange); }
+    .red   { color: var(--red); }
+    .accent{ color: var(--accent); }
+    .muted { color: var(--muted); }
+    b, strong { color: var(--text); }
+    p { margin-bottom: 12px; }
+    p:last-child { margin-bottom: 0; }
+
+    @media (max-width: 640px) {
+      .hero h1 { font-size: 2rem; }
+      .identity-grid { grid-template-columns: 1fr; }
+      .week-card { grid-template-columns: 1fr; }
+      .week-label { border-right: none; border-bottom: 1px solid var(--border); flex-direction: row; gap: 12px; justify-content: flex-start; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════ HERO ══════════════════════ -->
+<div class="hero">
+  <span class="hero-icon">🌬️</span>
+  <h1>AirSense</h1>
+  <div class="hero-tagline">"Know the air. Protect your health."</div>
+  <div class="badges">
+    <span class="badge badge-blue">Data Engineering</span>
+    <span class="badge badge-green">Machine Learning</span>
+    <span class="badge badge-purple">Generative AI</span>
+    <span class="badge badge-orange">MLOps</span>
+    <span class="badge badge-blue">100% Local · ₹0 Cost</span>
+    <span class="badge badge-green">12 Weeks</span>
+  </div>
+</div>
+
+<div class="container">
+
+<!-- ══════════════════════ 1. IDENTITY ══════════════════════ -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-num">1</div>
+    <div class="section-title">Project Identity</div>
+  </div>
+  <div class="identity-grid">
+    <div class="identity-item">
+      <div class="identity-label">Project Name</div>
+      <div class="identity-value">AirSense</div>
+    </div>
+    <div class="identity-item">
+      <div class="identity-label">Domain</div>
+      <div class="identity-value">Data Engineering + ML + Generative AI</div>
+    </div>
+    <div class="identity-item">
+      <div class="identity-label">Machine</div>
+      <div class="identity-value">Acer Nitro V15 · 16 GB RAM · Windows 11 · Dedicated GPU</div>
+    </div>
+    <div class="identity-item">
+      <div class="identity-label">Total Cost</div>
+      <div class="identity-value">₹ 0 &nbsp; <span class="muted">(all tools free & open-source)</span></div>
+    </div>
+    <div class="identity-item">
+      <div class="identity-label">Timeline</div>
+      <div class="identity-value">12 weeks · 7–10 hrs/week</div>
+    </div>
+    <div class="identity-item">
+      <div class="identity-label">Privacy Model</div>
+      <div class="identity-value">100% local — no user data ever leaves the laptop</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════ 2. THE PROBLEM ══════════════════════ -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-num">2</div>
+    <div class="section-title">The Problem This Solves — What to Tell Madam</div>
+  </div>
+
+  <div class="card" style="border-left: 4px solid var(--red);">
+    <h3 style="color:var(--red);">The Scale of India's Air Crisis</h3>
+    <p>India has <strong>14 of the world's 20 most polluted cities</strong> (IQAir, 2024). Air pollution causes an estimated <strong>7 million deaths globally per year</strong> (WHO). Cities regularly exceed AQI 150 — "Unhealthy" — and hit 300+ around Diwali and winters.</p>
+  </div>
+
+  <div class="card" style="border-left: 4px solid var(--orange);">
+    <h3 style="color:var(--orange);">The Information Gap</h3>
+    <p>The problem is <em>not</em> that data doesn't exist. The problem is that a person sees <strong>AQI = 187</strong> — a raw number with zero context. They don't know:</p>
+    <ul style="margin: 8px 0 0 20px; color: var(--muted);">
+      <li>Is 187 dangerous <em>for me specifically</em> (asthma, child, elderly)?</li>
+      <li>Will it get better or worse in the next 6 hours?</li>
+      <li>Should I let my child go to school tomorrow?</li>
+    </ul>
+    <p style="margin-top:10px;">Existing apps show numbers. They don't <strong>explain</strong>, don't <strong>forecast</strong>, and don't <strong>advise</strong>.</p>
+  </div>
+
+  <div class="card" style="border-left: 4px solid var(--green);">
+    <h3 style="color:var(--green);">What AirSense Does Instead</h3>
+    <div class="flow-grid">
+      <div class="flow-step"><div class="flow-step-num">1</div><div class="flow-step-text"><strong>Live color-coded gauge</strong><span>Not just a number — "Unhealthy · avoid outdoor activity"</span></div></div>
+      <div class="flow-step"><div class="flow-step-num">2</div><div class="flow-step-text"><strong>48-hour forecast chart</strong><span>Will tomorrow be better or worse?</span></div></div>
+      <div class="flow-step"><div class="flow-step-num">3</div><div class="flow-step-text"><strong>Interactive India map</strong><span>See pollution hotspots across cities</span></div></div>
+      <div class="flow-step"><div class="flow-step-num">4</div><div class="flow-step-text"><strong>Private AI health chat</strong><span>Type: "I have asthma, can I jog tomorrow?" → cited, grounded answer</span></div></div>
+      <div class="flow-step"><div class="flow-step-num">5</div><div class="flow-step-text"><strong>Telegram phone alerts</strong><span>Notify you before you step outside into bad air</span></div></div>
+    </div>
+    <p style="margin-top:14px; color: var(--muted);">Everything runs on the laptop. Questions never reach the cloud. The AI never pretends to be a doctor.</p>
+  </div>
+</div>
+
+<!-- ══════════════════════ 3. WHAT MAKES IT DIFFERENT ══════════════════════ -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-num">3</div>
+    <div class="section-title">How AirSense Differs from Normal AQI Projects</div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Normal AQI Student Project</th><th>AirSense</th></tr></thead>
+      <tbody>
+        <tr><td>Fetches API, shows a chart</td><td class="green">Streams via Kafka → validates → stores in time-series DB</td></tr>
+        <tr><td>Manual or no forecasting</td><td class="green">LightGBM auto-predicts next 24–48 hours every week</td></tr>
+        <tr><td>Static chart dashboard</td><td class="green">Live auto-refreshing dashboard + interactive India map</td></tr>
+        <tr><td>No AI component</td><td class="green">Private local AI health advisor with RAG grounding</td></tr>
+        <tr><td>Generic chatbot / cloud GPT</td><td class="green">Answers come only from WHO/CPCB official PDFs — no hallucination</td></tr>
+        <tr><td>Cloud APIs (costs money, not private)</td><td class="green">100% local LLM — user data stays on machine</td></tr>
+        <tr><td>No alerts</td><td class="green">Telegram bot alerts phone when AQI spikes</td></tr>
+        <tr><td>Train model once, never update</td><td class="green">MLOps: model auto-retrains weekly, auto-promotes if accuracy improves</td></tr>
+        <tr><td>Jupyter notebook deliverable</td><td class="green">Production-grade folder structure, tested, documented, demo-ready</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════ 4. TECH STACK ══════════════════════ -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-num">4</div>
+    <div class="section-title">Technology Stack — What & Why</div>
+  </div>
+
+  <p class="muted" style="margin-bottom:20px;">Every tool is free, local, and verified to run on Windows 11 with 16 GB RAM.</p>
+
+  <h3 style="color:var(--accent); margin-bottom:12px; font-size:1rem;">🔷 Data Layer</h3>
+  <div class="table-wrap" style="margin-bottom:20px;">
+    <table>
+      <thead><tr><th>Tool</th><th>Purpose</th><th>Why This One</th></tr></thead>
+      <tbody>
+        <tr><td>WAQI/AQICN API</td><td>Live AQI source</td><td>Free · 1000+ Indian cities · 1000 req/min</td></tr>
+        <tr><td>Apache Kafka 4.x</td><td>Streaming pipeline / message broker</td><td>Decouples fetch from storage · production-standard · no ZooKeeper</td></tr>
+        <tr><td>TimescaleDB</td><td>Time-series database</td><td>PostgreSQL superset · hypertables · Power BI compatible</td></tr>
+        <tr><td>Pydantic</td><td>Data validation</td><td>Catches corrupt API data before it hits the database</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 style="color:var(--purple); margin-bottom:12px; font-size:1rem;">🔷 Intelligence Layer</h3>
+  <div class="table-wrap" style="margin-bottom:20px;">
+    <table>
+      <thead><tr><th>Tool</th><th>Purpose</th><th>Why This One</th></tr></thead>
+      <tbody>
+        <tr><td>LightGBM</td><td>AQI forecasting model</td><td>Trains in seconds · excellent on tabular data · Windows-native</td></tr>
+        <tr><td>MLflow</td><td>Experiment tracking</td><td>Logs every model run · compare metrics · local file store</td></tr>
+        <tr><td>ChromaDB</td><td>Vector database</td><td>In-process · local · no server · stores guideline embeddings</td></tr>
+        <tr><td>all-MiniLM-L6-v2</td><td>Text embedding model</td><td>22 MB · fully offline · converts text to searchable vectors</td></tr>
+        <tr><td>Ollama + phi3:mini</td><td>Local AI / LLM</td><td>Fits 4 GB VRAM · GPU-accelerated · 100% free · 100% private</td></tr>
+        <tr><td>LangChain</td><td>AI agent framework</td><td>Connects LLM to tools: database + document search</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 style="color:var(--green); margin-bottom:12px; font-size:1rem;">🔷 Presentation & Operations Layer</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Tool</th><th>Purpose</th><th>Why This One</th></tr></thead>
+      <tbody>
+        <tr><td>Streamlit</td><td>Main dashboard</td><td>Python-native · rapid · supports gauges, maps, chat</td></tr>
+        <tr><td>Plotly</td><td>Charts (gauges, line charts)</td><td>Interactive · beautiful · embedded in Streamlit</td></tr>
+        <tr><td>Folium</td><td>Interactive India map</td><td>Simple · Python-based · city AQI bubbles on real map</td></tr>
+        <tr><td>Power BI Desktop</td><td>Executive BI report</td><td>Free · professional DAX measures · connects to TimescaleDB</td></tr>
+        <tr><td>Docker</td><td>Runs TimescaleDB only</td><td>Only 2 containers: TimescaleDB + optional Grafana</td></tr>
+        <tr><td>Windows Task Scheduler</td><td>Automated hourly/weekly jobs</td><td>Built-in · no extra service needed</td></tr>
+        <tr><td>Telegram Bot API</td><td>AQI spike alerts to phone</td><td>Free · 40 lines of Python · zero infrastructure</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════ 5. HOW IT CONNECTS ══════════════════════ -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-num">5</div>
+    <div class="section-title">How Everything Connects — End-to-End Flow</div>
+  </div>
+  <div class="flow">
+    <div class="pipeline">
+      <div class="pipe-node">
+        <div class="pipe-icon">🌐</div>
+        <div>
+          <div class="pipe-label">WAQI API (Internet)</div>
+          <div class="pipe-desc">Live AQI data for 7+ Indian cities — called every hour by Task Scheduler</div>
+        </div>
+      </div>
+      <div class="pipe-arrow">↓</div>
+      <div class="pipe-node">
+        <div class="pipe-icon">📨</div>
+        <div>
+          <div class="pipe-label">Apache Kafka — "aqi_raw" Topic</div>
+          <div class="pipe-desc">Buffers incoming data. Decouples fetcher from consumer. Enables replay on crash.</div>
+        </div>
+      </div>
+      <div class="pipe-arrow">↓</div>
+      <div class="pipe-node">
+        <div class="pipe-icon">✅</div>
+        <div>
+          <div class="pipe-label">Pydantic Validation</div>
+          <div class="pipe-desc">Valid data → TimescaleDB &nbsp;|&nbsp; Invalid data → Error log (never silently dropped)</div>
+        </div>
+      </div>
+      <div class="pipe-arrow">↓</div>
+      <div class="pipe-node">
+        <div class="pipe-icon">🗄️</div>
+        <div>
+          <div class="pipe-label">TimescaleDB — aqi_readings (hypertable)</div>
+          <div class="pipe-desc">Time-series database. Stores all readings. Feeds dashboard, ML model, Power BI.</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin:20px 0; display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+      <div class="pipeline">
+        <div class="pipe-node" style="border-color:var(--purple);">
+          <div class="pipe-icon">🤖</div>
+          <div>
+            <div class="pipe-label">LightGBM Model</div>
+            <div class="pipe-desc">Weekly retrain via Task Scheduler. 48-hour forecasts saved to aqi_forecasts table.</div>
+          </div>
+        </div>
+        <div class="pipe-arrow">↓</div>
+        <div class="pipe-node" style="border-color:var(--purple);">
+          <div class="pipe-icon">📊</div>
+          <div>
+            <div class="pipe-label">MLflow Tracking</div>
+            <div class="pipe-desc">Logs RMSE, parameters, model file for every retrain. Champion-challenger promotion.</div>
+          </div>
+        </div>
+      </div>
+      <div class="pipeline">
+        <div class="pipe-node" style="border-color:var(--green);">
+          <div class="pipe-icon">📄</div>
+          <div>
+            <div class="pipe-label">WHO/CPCB PDFs → ChromaDB</div>
+            <div class="pipe-desc">Official health guidelines embedded and stored locally as searchable vectors.</div>
+          </div>
+        </div>
+        <div class="pipe-arrow">↓</div>
+        <div class="pipe-node" style="border-color:var(--green);">
+          <div class="pipe-icon">🧠</div>
+          <div>
+            <div class="pipe-label">Ollama phi3:mini (Local LLM)</div>
+            <div class="pipe-desc">Receives top-3 guideline chunks + current AQI → returns cited health answer. 100% offline.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pipe-node" style="border-color:var(--accent); background: rgba(88,166,255,0.06);">
+      <div class="pipe-icon">🖥️</div>
+      <div>
+        <div class="pipe-label">Streamlit Dashboard — localhost:8501</div>
+        <div class="pipe-desc">Live AQI gauges · 48-hr forecast · India map · Health chat · Power BI report · Telegram alerts</div>
+      </div>
+    </div>
+
+    <p style="margin-top:16px; font-size:13px; color:var(--muted); text-align:center;">
+      Every connection is <strong style="color:var(--green);">local (localhost)</strong>. The only external call is the WAQI API for live data.
+    </p>
+  </div>
+</div>
+
+<!-- ══════════════════════ 6. DOABILITY CHECK ══════════════════════ -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-num">6</div>
+    <div class="section-title">Is It 100% Doable? — Honest Verification</div>
+  </div>
+
+  <div class="table-wrap" style="margin-bottom:24px;">
+    <table>
+      <thead><tr><th>Component</th><th>Status</th><th>Honest Note</th></tr></thead>
+      <tbody>
+        <tr><td>WAQI API</td><td><span class="pill pill-green">✅ Real</span></td><td>Free · 1000 req/min · instant token registration</td></tr>
+        <tr><td>Kafka 4.x on Windows</td><td><span class="pill pill-orange">⚠️ Quirks</span></td><td>Works — but install to C:\kafka (short path). Java 17 required. Expect 2–3 hrs setup pain on Day 1.</td></tr>
+        <tr><td>TimescaleDB (Docker)</td><td><span class="pill pill-green">✅ Real</span></td><td>Must create .wslconfig (3 GB WSL2 cap) before Docker. Plan includes this step.</td></tr>
+        <tr><td>LightGBM</td><td><span class="pill pill-green">✅ Trivial</span></td><td>pip install lightgbm. Trains in seconds. No issues on Windows.</td></tr>
+        <tr><td>Ollama + phi3:mini</td><td><span class="pill pill-green">✅ Confirmed</span></td><td>Fits 4 GB VRAM (RTX 2050). GPU-accelerated. Free.</td></tr>
+        <tr><td>ChromaDB + RAG</td><td><span class="pill pill-green">✅ Real</span></td><td>In-process, no server, pip install.</td></tr>
+        <tr><td>LangChain</td><td><span class="pill pill-orange">⚠️ Pin versions</span></td><td>API changes between releases. Pin exact version in requirements.txt or get import errors.</td></tr>
+        <tr><td>Streamlit</td><td><span class="pill pill-green">✅ Trivial</span></td><td>Python-native. Very easy.</td></tr>
+        <tr><td>Folium India Map</td><td><span class="pill pill-green">✅ Trivial</span></td><td>pip install folium streamlit-folium. 15 lines. Looks great.</td></tr>
+        <tr><td>Power BI Desktop</td><td><span class="pill pill-green">✅ Free</span></td><td>Connects to TimescaleDB via PostgreSQL driver.</td></tr>
+        <tr><td>Telegram Alert Bot</td><td><span class="pill pill-green">✅ Trivial</span></td><td>40 lines of Python. Free. 1 afternoon.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 style="color:var(--orange); margin-bottom:12px;">Three Honest Risks</h3>
+  <div class="verdict warn">
+    <div class="verdict-head"><div class="verdict-icon">⚡</div><div class="verdict-title">Risk 1 — Kafka setup takes 2–3 hours on Day 1</div></div>
+    <div class="verdict-body">Windows path-length errors are real. Fix: install to C:\kafka. Use Java 17 in JAVA_HOME. After first-time setup it just works. This is normal. Everyone fights it.</div>
+  </div>
+  <div class="verdict warn">
+    <div class="verdict-head"><div class="verdict-icon">📦</div><div class="verdict-title">Risk 2 — LangChain version sensitivity</div></div>
+    <div class="verdict-body">Pin every library version in requirements.txt from Day 1. Don't pip install latest blindly or you'll get import errors when something changes upstream.</div>
+  </div>
+  <div class="verdict warn">
+    <div class="verdict-head"><div class="verdict-icon">📈</div><div class="verdict-title">Risk 3 — Model RMSE may not hit target immediately</div></div>
+    <div class="verdict-body">Target is RMSE &lt; 30 AQI units. You may get 35–40 in early weeks. That's fine — document it, improve features, iterate. Honesty in defense is better than inflated claims.</div>
+  </div>
+
+  <h3 style="color:var(--accent); margin: 24px 0 12px;">The 5 Upgrades — Verified</h3>
+  <div class="verdict ok">
+    <div class="verdict-head"><div class="verdict-icon">🗺️</div><div class="verdict-title">Geo Heatmap (Folium) <span class="pill pill-green">ADD TO CORE — Week 4</span></div></div>
+    <div class="verdict-body">15 lines of Python. 1 afternoon. Most visually impressive addition. Shows interactive India map with color-coded AQI bubbles.</div>
+  </div>
+  <div class="verdict ok">
+    <div class="verdict-head"><div class="verdict-icon">📲</div><div class="verdict-title">Telegram Alert Bot <span class="pill pill-green">ADD TO CORE — Week 11</span></div></div>
+    <div class="verdict-body">40 lines of Python. Free. Huge demo impact — your phone buzzes live during the defense presentation.</div>
+  </div>
+  <div class="verdict ok">
+    <div class="verdict-head"><div class="verdict-icon">🔌</div><div class="verdict-title">IoT Hardware (ESP32 + PMS5003) <span class="pill pill-orange">AFTER WEEK 12</span></div></div>
+    <div class="verdict-body">₹2,000 hardware. Doable in 2 weekends. Software bridge (MQTT → Kafka) is easy. Hardware wiring is the learning curve. Save for after core is complete.</div>
+  </div>
+  <div class="verdict no">
+    <div class="verdict-head"><div class="verdict-icon">👁️</div><div class="verdict-title">Vision AI — LLaVA Sky Photo <span class="pill pill-red">SKIP (RTX 2050)</span></div></div>
+    <div class="verdict-body">LLaVA 7B needs 4.7 GB+ VRAM. RTX 2050 has 4 GB. Won't fit. The master plan itself says "Skip this" for RTX 2050. Only attempt if your GPU is RTX 3050+ (6 GB VRAM).</div>
+  </div>
+  <div class="verdict no">
+    <div class="verdict-head"><div class="verdict-icon">📱</div><div class="verdict-title">Full Mobile App (Flutter) <span class="pill pill-red">SKIP — FUTURE SCOPE</span></div></div>
+    <div class="verdict-body">Requires Dart/Flutter — a completely separate tech stack. Too much scope creep for 12 weeks. FastAPI backend alone is a good addition; full phone app is Phase 2.</div>
+  </div>
+</div>
+
+<!-- ══════════════════════ 7. SKILLS ══════════════════════ -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-num">7</div>
+    <div class="section-title">Skills You Actually Gain — Mapped to Job Roles</div>
+  </div>
+  <div class="skill-grid">
+    <div class="skill-card">
+      <div class="skill-role">🏗️ Data Engineer</div>
+      <ul class="skill-list">
+        <li>Kafka streaming pipeline design</li>
+        <li>TimescaleDB hypertables</li>
+        <li>Continuous aggregates & retention</li>
+        <li>Pydantic schema validation</li>
+        <li>Docker + WSL2 configuration</li>
+        <li>Task Scheduler orchestration</li>
+      </ul>
+    </div>
+    <div class="skill-card">
+      <div class="skill-role">🤖 ML / Data Scientist</div>
+      <ul class="skill-list">
+        <li>Time-series feature engineering</li>
+        <li>Lag features, rolling averages</li>
+        <li>Walk-forward validation (correct method)</li>
+        <li>LightGBM training & tuning</li>
+        <li>RMSE / MAE / directional accuracy</li>
+        <li>MLflow experiment tracking</li>
+      </ul>
+    </div>
+    <div class="skill-card">
+      <div class="skill-role">🧠 AI / GenAI Engineer</div>
+      <ul class="skill-list">
+        <li>RAG architecture end-to-end</li>
+        <li>Vector embeddings (MiniLM)</li>
+        <li>ChromaDB similarity search</li>
+        <li>Local LLM deployment (Ollama)</li>
+        <li>LangChain agent + tool-calling</li>
+        <li>Safety prompt engineering</li>
+      </ul>
+    </div>
+    <div class="skill-card">
+      <div class="skill-role">⚙️ MLOps Engineer</div>
+      <ul class="skill-list">
+        <li>Automated weekly retraining</li>
+        <li>Champion-challenger promotion</li>
+        <li>Production vs staging model directories</li>
+        <li>MLflow run comparison over time</li>
+        <li>Alerting when model degrades</li>
+      </ul>
+    </div>
+    <div class="skill-card">
+      <div class="skill-role">📊 Data Analyst / BI Dev</div>
+      <ul class="skill-list">
+        <li>Streamlit multi-tab dashboard</li>
+        <li>Plotly gauges & forecast charts</li>
+        <li>Folium interactive maps</li>
+        <li>Power BI with DAX measures</li>
+        <li>EDA: diurnal patterns, Z-score spikes</li>
+      </ul>
+    </div>
+    <div class="skill-card">
+      <div class="skill-role">💻 Software Engineer</div>
+      <ul class="skill-list">
+        <li>Git + secrets management (.env)</li>
+        <li>Modular project structure</li>
+        <li>Unit testing with pytest</li>
+        <li>Structured logging (not print)</li>
+        <li>RAM budgeting on one machine</li>
+        <li>Demo-day resilience planning</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════ 8. BUILD PLAN ══════════════════════ -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-num">8</div>
+    <div class="section-title">12-Week Build Plan — Step by Step Overview</div>
+  </div>
+  <div class="timeline">
+
+    <div style="margin-bottom:8px; color:var(--accent); font-weight:700; font-size:13px; text-transform:uppercase; letter-spacing:0.06em;">Phase 1 — Data Foundation</div>
+    <div class="week-card">
+      <div class="week-label"><div class="week-num">1</div><div class="week-tag">Week</div></div>
+      <div class="week-body">
+        <div class="week-goal">Live data flows into Kafka</div>
+        <div class="week-desc">Register WAQI token · Write fetch script · Setup Kafka KRaft · Create aqi_raw topic · Schedule hourly Task Scheduler job</div>
+        <div class="week-end">Open Kafka console — see new AQI messages arriving every hour</div>
+      </div>
+    </div>
+    <div class="week-card">
+      <div class="week-label"><div class="week-num">2</div><div class="week-tag">Week</div></div>
+      <div class="week-body">
+        <div class="week-goal">Clean data accumulates in TimescaleDB</div>
+        <div class="week-desc">Create .wslconfig · Start TimescaleDB via Docker · Write Kafka consumer with Pydantic validation · Create hypertable schema</div>
+        <div class="week-end">Run SQL query — see rows growing in aqi_readings every hour</div>
+      </div>
+    </div>
+
+    <div style="margin:16px 0 8px; color:var(--accent); font-weight:700; font-size:13px; text-transform:uppercase; letter-spacing:0.06em;">Phase 2 — Visualization</div>
+    <div class="week-card">
+      <div class="week-label"><div class="week-num">3</div><div class="week-tag">Week</div></div>
+      <div class="week-body">
+        <div class="week-goal">First live dashboard</div>
+        <div class="week-desc">Build Streamlit app · Color-coded AQI gauges · 24-hour historical line chart · Auto-refresh every 60 seconds · City selector</div>
+        <div class="week-end">Open browser at localhost:8501 — live gauges updating in real time</div>
+      </div>
+    </div>
+    <div class="week-card">
+      <div class="week-label"><div class="week-num">4</div><div class="week-tag">Week</div></div>
+      <div class="week-body">
+        <div class="week-goal">EDA + India Map</div>
+        <div class="week-desc">Jupyter EDA: diurnal patterns, seasonal trends, Z-score anomalies · Add Folium interactive India map to dashboard</div>
+        <div class="week-end">India map shows red/orange/green city bubbles. Click any city, see its AQI.</div>
+      </div>
+    </div>
+
+    <div style="margin:16px 0 8px; color:var(--purple); font-weight:700; font-size:13px; text-transform:uppercase; letter-spacing:0.06em;">Phase 3 — Forecasting</div>
+    <div class="week-card">
+      <div class="week-label"><div class="week-num">5</div><div class="week-tag">Week</div></div>
+      <div class="week-body">
+        <div class="week-goal">Train the ML model</div>
+        <div class="week-desc">Download CPCB/Kaggle historical data · Engineer lag features · Train LightGBM with walk-forward validation · Log to MLflow · Store forecasts in DB</div>
+        <div class="week-end">MLflow UI shows run with RMSE. Forecasts appear in aqi_forecasts table.</div>
+      </div>
+    </div>
+    <div class="week-card">
+      <div class="week-label"><div class="week-num">6</div><div class="week-tag">Week</div></div>
+      <div class="week-body">
+        <div class="week-goal">Forecast visible on dashboard</div>
+        <div class="week-desc">Add forecast chart: solid line = actual AQI, dashed line = predicted next 48 hours. Both on same Plotly chart.</div>
+        <div class="week-end">Chart clearly shows today's data transitioning to tomorrow's forecast</div>
+      </div>
+    </div>
+
+    <div style="margin:16px 0 8px; color:var(--green); font-weight:700; font-size:13px; text-transform:uppercase; letter-spacing:0.06em;">Phase 4 — AI Health Advisor</div>
+    <div class="week-card">
+      <div class="week-label"><div class="week-num">7</div><div class="week-tag">Week</div></div>
+      <div class="week-body">
+        <div class="week-goal">Build the knowledge base</div>
+        <div class="week-desc">Download WHO Air Quality Guidelines PDF + CPCB standards · Split into 500-token chunks · Embed with all-MiniLM-L6-v2 · Store in ChromaDB locally</div>
+        <div class="week-end">Test: query "PM2.5 safe limit for asthma" → returns real WHO document chunks</div>
+      </div>
+    </div>
+    <div class="week-card">
+      <div class="week-label"><div class="week-num">8</div><div class="week-tag">Week</div></div>
+      <div class="week-body">
+        <div class="week-goal">AI chat is live and safe</div>
+        <div class="week-desc">Build LangChain agent · Tools: search ChromaDB + get current AQI · Connect to Ollama phi3:mini · Add strict system prompt preventing hallucination</div>
+        <div class="week-end">Type a health question → cited, grounded answer in 5–10 seconds. Fully offline.</div>
+      </div>
+    </div>
+
+    <div style="margin:16px 0 8px; color:var(--orange); font-weight:700; font-size:13px; text-transform:uppercase; letter-spacing:0.06em;">Phase 5 — Polish & Reports</div>
+    <div class="week-card">
+      <div class="week-label"><div class="week-num">9</div><div class="week-tag">Week</div></div>
+      <div class="week-body">
+        <div class="week-goal">Professional unified app</div>
+        <div class="week-desc">Unified tab structure · AI kill-switch · Medical disclaimer on every page · Full end-to-end test</div>
+        <div class="week-end">App feels polished. Kill-switch disables AI without breaking rest of dashboard.</div>
+      </div>
+    </div>
+    <div class="week-card">
+      <div class="week-label"><div class="week-num">10</div><div class="week-tag">Week</div></div>
+      <div class="week-body">
+        <div class="week-goal">Power BI executive report</div>
+        <div class="week-desc">Connect Power BI Desktop to TimescaleDB · Two-page report: executive summary + city detail · DAX measures for AQI categories and city rankings</div>
+        <div class="week-end">Power BI report opens and shows months of data with interactive filters</div>
+      </div>
+    </div>
+
+    <div style="margin:16px 0 8px; color:var(--yellow); font-weight:700; font-size:13px; text-transform:uppercase; letter-spacing:0.06em;">Phase 6 — Automation & Demo Prep</div>
+    <div class="week-card">
+      <div class="week-label"><div class="week-num">11</div><div class="week-tag">Week</div></div>
+      <div class="week-body">
+        <div class="week-goal">System improves itself + alerts</div>
+        <div class="week-desc">MLOps: weekly retrain → champion-challenger comparison → auto-promote better model · Add Telegram alert bot: spike detected → phone notification</div>
+        <div class="week-end">Manually trigger AQI spike — phone buzzes with automated alert within seconds</div>
+      </div>
+    </div>
+    <div class="week-card">
+      <div class="week-label"><div class="week-num">12</div><div class="week-tag">Week</div></div>
+      <div class="week-body">
+        <div class="week-goal">Demo-ready & bulletproof</div>
+        <div class="week-desc">24-hour stress test · Backup scenarios tested · start_demo.bat one-click launcher · Full README + documentation · Final defense prep</div>
+        <div class="week-end">Press one .bat file → all services start in sequence → system ready for demo</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════ 9. FUTURE FEATURES ══════════════════════ -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-num">9</div>
+    <div class="section-title">Future Features — Phase 2</div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Feature</th><th>Effort</th><th>Why Interesting</th></tr></thead>
+      <tbody>
+        <tr><td>🔌 IoT Sensor (ESP32 + PMS5003)</td><td>2 weekends · ₹2,000</td><td>Your own hyper-local sensor — real edge computing in your home</td></tr>
+        <tr><td>🔗 FastAPI Backend</td><td>2–3 days</td><td>Turns AirSense into a REST API — other apps can consume it</td></tr>
+        <tr><td>🔍 Anomaly Detection (Isolation Forest)</td><td>1 week</td><td>Auto-flags unusual pollution events without manual thresholds</td></tr>
+        <tr><td>🏙️ More Cities (20+)</td><td>1 hour</td><td>Just add city names to config.yaml — WAQI supports 1000+</td></tr>
+        <tr><td>📧 Email / WhatsApp Alerts</td><td>2–3 days</td><td>Extend Telegram bot to more notification channels</td></tr>
+        <tr><td>🇮🇳 Bilingual UI (Hindi + English)</td><td>2–3 days</td><td>Localization for wider Indian users</td></tr>
+        <tr><td>🐳 Docker-Compose Full Stack</td><td>1 week</td><td>Containerize everything — deploy anywhere</td></tr>
+        <tr><td>👁️ Vision AI (RTX 3050+ only)</td><td>1 week</td><td>Upload sky photo → AI estimates smog level visually</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════ 10. ONE-PARA SUMMARY ══════════════════════ -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-num">10</div>
+    <div class="section-title">One-Paragraph Summary — For Report / Madam</div>
+  </div>
+  <div class="summary-box">
+    AirSense is a real-time air quality intelligence system built entirely on a single laptop with zero cloud dependency and zero cost. It ingests live AQI data from 7+ Indian cities every hour through an Apache Kafka streaming pipeline, validates and stores readings in a TimescaleDB time-series database, trains a LightGBM machine learning model weekly to forecast pollution levels 24–48 hours ahead, and delivers insights through a Streamlit dashboard featuring live color-coded gauges, an interactive India map, and a 48-hour forecast chart. Its centrepiece is a private generative AI health advisor — powered by a local LLM (Ollama + phi3:mini) and a RAG pipeline built on official WHO and CPCB health guidelines — that answers personal health questions like <em>"Is it safe for my asthmatic child to go to school tomorrow?"</em> with cited, grounded, non-hallucinated answers, entirely on-device. A Telegram alert bot notifies the user when AQI spikes, and automated MLOps ensures the forecasting model improves every week without manual intervention. AirSense covers the complete spectrum of modern data roles — data engineering, machine learning, generative AI, MLOps, BI reporting, and software engineering — all in one integrated, production-grade, demo-ready system.
+  </div>
+</div>
+
+</div><!-- /container -->
+
+<!-- ══════════════════════ FOOTER ══════════════════════ -->
+<div class="footer">
+  <strong>AirSense</strong> · MSc BI &amp; Analytics Capstone Project · July 2026<br>
+  Data: <strong>WAQI (waqi.info)</strong> · Health standards: <strong>WHO 2021 · CPCB NAAQS</strong> · All tools free &amp; open-source<br>
+  <em>Health guidance must always be verified with a qualified medical professional.</em>
+</div>
+
+</body>
+</html>
