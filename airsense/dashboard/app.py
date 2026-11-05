@@ -72,6 +72,7 @@ from dashboard.components.forecast_view import (
     get_benchmark_comparison_data,
 )
 from dashboard.components.ai_advisor_view import render_ai_advisor_view
+from dashboard.components.health_view import render_pipeline_health_tab
 
 # ── Page Configuration ─────────────────────────────────────────────────────────
 st.set_page_config(
@@ -187,6 +188,7 @@ def main():
                 "📈 Business Intelligence & Analytics",
                 "🔮 48-Hour AQI Forecast",
                 "🤖 AI Health Advisor",
+                "🩺 Pipeline Health",
             ],
             index=0,
             label_visibility="collapsed",
@@ -634,6 +636,12 @@ def main():
     # ═══════════════════════════════════════════════════════════════════════════
     elif selected_view == "🤖 AI Health Advisor":
         render_ai_advisor_view(df_latest=df_latest)
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # VIEW 6: PIPELINE HEALTH (Phase 10 — Observability)
+    # ═══════════════════════════════════════════════════════════════════════════
+    elif selected_view == "🩺 Pipeline Health":
+        render_pipeline_health_tab(engine=engine)
 
     # ── Footer ────────────────────────────────────────────────────────────────
     st.markdown("---")
