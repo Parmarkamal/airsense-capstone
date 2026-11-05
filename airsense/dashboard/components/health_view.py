@@ -475,10 +475,12 @@ Out-of-range values (AQI > 500, PM2.5 > 999 µg/m³) or future timestamps
 the full error payload. The pipeline never crashes — it logs and continues.
 
 **Layer 2 — Open-Meteo Hybrid Fallback** (Phase 5):
-If the WAQI API returns no data for a city, `fetch_aqi.py` falls back to
-Open-Meteo's free weather API. It synthesises a CPCB-calibrated AQI estimate
-from temperature, humidity, and wind speed, tagged `data_source = "Open-Meteo"`.
-The dashboard shows a 🟡 Delayed badge so the operator knows it is an estimate.
+If the WAQI API returns stale data (>2 hours old) or fails, `fetch_aqi.py` falls back to
+Open-Meteo's global atmospheric air-quality API. It ingests hourly chemical transport
+pollutant concentrations (PM2.5, PM10, NO2, CO, SO2, O3) simulated by the ECMWF CAMS
+IFS-AER model on a ~45 km grid. AirSense normalizes units (converting CO from µg/m³ to mg/m³)
+and calculates both CPCB NAQI and indicative AQI, transparently badging the source as
+`🛰️ Model Est. (CAMS Global ~45km)` so examiners know it is a model simulation.
 
 **Layer 3 — Offline Replay Mode** (Phase 8):
 If both WAQI and Open-Meteo are unavailable (full network outage),
@@ -486,6 +488,27 @@ If both WAQI and Open-Meteo are unavailable (full network outage),
 so the most recent reading maps to 1 hour ago, and writes to TimescaleDB directly.
 The dashboard shows a 📼 REPLAY MODE ACTIVE banner.
 This guarantees the viva demo never shows an empty dashboard even with no internet.
+        """)
+
+    with st.expander("Q5: Why does AirSense / CPCB report a different AQI from Google, Apple, or IQAir?"):
+        st.markdown(r"""
+**Examiner Answer:**
+
+Air quality index discrepancies across public consumer apps and government monitors stem from **three fundamental scientific reasons**:
+
+1. **Different Mathematical Breakpoint Scales**:
+   - **India CPCB NAQI (2014)**: Calibrated for South Asian baseline pollution. For PM2.5, concentrations up to 30 µg/m³ are *Good* (0-50) and up to 60 µg/m³ are *Satisfactory* (51-100).
+   - **US EPA AQI (2024 revision)**: Significantly stricter. PM2.5 Moderate ceiling was tightened to 35.4 µg/m³. At 35 µg/m³, US EPA gives AQI ~99 (*Moderate*), whereas Indian CPCB gives AQI 58 (*Satisfactory*).
+   - **Platform Conventions**: IQAir defaults to US EPA AQI worldwide; Google supports 70+ localized national AQIs as well as a Universal AQI; Apple Weather utilizes BreezoMeter atmospheric algorithms.
+
+2. **Averaging Period & Data Completeness Gates**:
+   - Official Indian CPCB NAQI is a **24-hour running arithmetic mean** requiring at least 16 valid hourly readings ($\ge 6$ hours for 8h CO/O3).
+   - Commercial smartphone apps frequently display **1-hour instantaneous snapshots** or NowCast weighted values, which fluctuate much faster than official 24-hour compliance figures.
+
+3. **Physical CAAQMS Ground Sensors vs Grid Modeling**:
+   - Central coordinates (e.g. 23.0225, 72.5714 for Ahmedabad) identify an urban centroid, not a specific monitoring station.
+   - Ground stations (e.g. CAAQMS in Maninagar or DPCC in Delhi) measure real-time microclimate sensors.
+   - Atmospheric models (such as ECMWF CAMS on Open-Meteo) compute reanalysis on a ~45 km grid cell. AirSense explicitly badges physical sensors (`🏛️ Ground Station`) versus model estimates (`🛰️ Model Est.`).
         """)
 
     st.markdown("---")

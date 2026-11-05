@@ -84,6 +84,8 @@ class TestValidReadings:
             "time", "city", "city_display_name", "station_id",
             "country", "aqi", "pm25", "pm10", "no2", "co", "so2", "o3",
             "lat", "lon", "data_source", "schema_version", "fetched_at",
+            "cpcb_aqi", "prominent_pollutant", "source_type",
+            "station_operator", "calculation_method", "observation_age_hours",
         }
         assert expected_keys == set(db_row.keys())
 

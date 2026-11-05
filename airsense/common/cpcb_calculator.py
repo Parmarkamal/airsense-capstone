@@ -80,6 +80,46 @@ CPCB_CATEGORIES: Final[list[tuple[int, int, str, str]]] = [
     (401, 500, "Severe", "#7E0023"),
 ]
 
+# US EPA (2024 revised) PM2.5 Breakpoints: (B_LO, B_HI, I_LO, I_HI, category, color)
+US_EPA_PM25_BREAKPOINTS: Final[list[tuple[float, float, int, int, str, str]]] = [
+    (0.0, 9.0, 0, 50, "Good", "#00E400"),
+    (9.1, 35.4, 51, 100, "Moderate", "#FFFF00"),
+    (35.5, 55.4, 101, 150, "Unhealthy for Sensitive Groups", "#FF7E00"),
+    (55.5, 125.4, 151, 200, "Unhealthy", "#FF0000"),
+    (125.5, 225.4, 201, 300, "Very Unhealthy", "#8F3F97"),
+    (225.5, 500.4, 301, 500, "Hazardous", "#7E0023"),
+]
+
+
+def calculate_us_epa_pm25_aqi(pm25: float | None) -> tuple[int | None, str, str]:
+    """Calculate US EPA (2024 revised) AQI for PM2.5.
+
+    Returns:
+        (aqi, category_label, hex_color)
+    """
+    if pm25 is None or math.isnan(pm25) or pm25 < 0:
+        return (None, "Unknown", "#6B7280")
+
+    if pm25 >= 500.4:
+        return (500, "Hazardous", "#7E0023")
+
+    for b_lo, b_hi, i_lo, i_hi, cat, color in US_EPA_PM25_BREAKPOINTS:
+        if b_lo <= pm25 <= b_hi:
+            sub = i_lo + ((i_hi - i_lo) / (b_hi - b_lo)) * (pm25 - b_lo)
+            return (round(sub), cat, color)
+
+    # Bridge discrete boundaries
+    for idx in range(len(US_EPA_PM25_BREAKPOINTS) - 1):
+        curr_b_hi = US_EPA_PM25_BREAKPOINTS[idx][1]
+        next_b_lo = US_EPA_PM25_BREAKPOINTS[idx + 1][0]
+        if curr_b_hi < pm25 < next_b_lo:
+            b_lo, b_hi, i_lo, i_hi, cat, color = US_EPA_PM25_BREAKPOINTS[idx + 1]
+            sub = i_lo + ((i_hi - i_lo) / (b_hi - b_lo)) * (pm25 - b_lo)
+            return (round(sub), cat, color)
+
+    return (None, "Unknown", "#6B7280")
+
+
 POLLUTANT_DISPLAY_NAMES: Final[dict[str, str]] = {
     "pm25": "PM2.5",
     "pm10": "PM10",

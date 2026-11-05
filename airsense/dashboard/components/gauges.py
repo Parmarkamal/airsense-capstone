@@ -150,13 +150,17 @@ def render_aqi_gauge(city_name: str, aqi_val: float | None) -> go.Figure:
 
 def render_pollutants_bar(row: pd.Series) -> go.Figure:
     """Render a horizontal bar breakdown of individual pollutants."""
+    co_val = row.get("co")
+    if co_val is not None and not pd.isna(co_val) and co_val > 50.0:
+        co_val = round(co_val / 1000.0, 3)
+
     pollutants = {
         "PM2.5 (µg/m³)": row.get("pm25"),
         "PM10 (µg/m³)": row.get("pm10"),
-        "NO2 (ppb)": row.get("no2"),
-        "CO (ppm)": row.get("co"),
-        "SO2 (ppb)": row.get("so2"),
-        "O3 (ppb)": row.get("o3"),
+        "NO2 (µg/m³)": row.get("no2"),
+        "CO (mg/m³)": co_val,
+        "SO2 (µg/m³)": row.get("so2"),
+        "O3 (µg/m³)": row.get("o3"),
     }
 
     labels = []

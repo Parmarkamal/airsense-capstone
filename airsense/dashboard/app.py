@@ -47,6 +47,8 @@ from dashboard.data_access import (
     get_pipeline_stats,
     get_city_forecast,
     is_replay_mode_active,
+    get_city_rolling_cpcb_aqi,
+    get_provenance_badge,
 )
 from dashboard.components.gauges import (
     get_aqi_category,
@@ -63,6 +65,7 @@ from dashboard.components.insights import (
     render_wow_trend_chart,
     render_city_ranking_matrix,
     render_executive_scorecard,
+    render_standards_comparison_chart,
 )
 from dashboard.components.forecast_view import (
     render_combined_forecast_chart,
@@ -281,7 +284,9 @@ def main():
 
         cols = st.columns(len(df_latest))
         for idx, (_, row) in enumerate(df_latest.iterrows()):
-            category = get_aqi_category(row["aqi"])
+            # Dual AQI display: show CPCB NAQI if computed, along with source indicator
+            display_aqi = row.get("cpcb_aqi") if pd.notna(row.get("cpcb_aqi")) else row.get("aqi")
+            category = get_aqi_category(display_aqi)
             freshness_label = row.get("freshness_label", "🟢 Live (<1h old)")
             freshness_color = row.get("freshness_color", "green")
             age_hours = row.get("data_age_hours")
@@ -290,24 +295,28 @@ def main():
                 if age_hours is not None and pd.notna(age_hours) and age_hours != float("inf")
                 else "n/a"
             )
-            source = row.get("data_source", "WAQI")
+            prov = get_provenance_badge(row)
+            prom = row.get("prominent_pollutant") or "PM2.5"
             with cols[idx]:
                 st.markdown(f"""
-                <div class="kpi-card">
-                    <div style="font-weight:600; font-size:14px; color:#1E293B; margin-bottom:4px;">
+                <div class="kpi-card" style="border-top: 3px solid {prov.get('border_color', '#3B82F6')};">
+                    <div style="font-weight:700; font-size:14px; color:#1E293B; margin-bottom:2px;">
                         {row['city_display_name']}
                     </div>
-                    <div style="font-size:30px; font-weight:800; color:{category['color']}; margin:4px 0;">
-                        {int(row['aqi']) if pd.notna(row['aqi']) else '--'}
+                    <div style="font-size:28px; font-weight:800; color:{category['color']}; margin:2px 0;">
+                        {int(display_aqi) if pd.notna(display_aqi) else '--'}
                     </div>
                     <span class="badge" style="background-color:{category['bg_color']}; color:{category['text_color']};">
                         {category['label']}
                     </span>
-                    <div style="margin-top:8px; font-size:11px; font-weight:600; color:{freshness_color};">
+                    <div style="margin-top:6px; font-size:11px; font-weight:600; color:#475569;">
+                        Key: <b>{prom}</b>
+                    </div>
+                    <div style="margin-top:4px; font-size:11px; font-weight:600; color:{freshness_color};">
                         {freshness_label}
                     </div>
-                    <div style="margin-top:2px; font-size:10px; color:#64748B;">
-                        Age {age_text} · {source}
+                    <div style="margin-top:3px; font-size:9.5px; color:#64748B; line-height:1.2;">
+                        {prov['badge']}
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
@@ -324,24 +333,43 @@ def main():
             )
         selected_slug = slug_map[selected_display]
         city_data = df_latest[df_latest["city"] == selected_slug].iloc[0]
-        category = get_aqi_category(city_data["aqi"])
+        rolling_cpcb = get_city_rolling_cpcb_aqi(engine, selected_slug)
+        prov_info = get_provenance_badge(city_data)
+
+        # Dual AQI & Provenance Banner
+        rolling_aqi_str = f"<b>{rolling_cpcb['aqi']}</b> ({rolling_cpcb['category']})" if rolling_cpcb.get("aqi") else "Averaging..."
+        prom_str = rolling_cpcb.get("prominent_pollutant") or city_data.get("prominent_pollutant") or "PM2.5"
+        st.markdown(f"""
+        <div style="background:#F1F5F9; border-radius:10px; padding:12px 18px; margin-bottom:16px; border:1px solid #CBD5E1; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;">
+            <div>
+                🏛️ <b>Official CPCB NAQI 24h Rolling Standard:</b> {rolling_aqi_str} 
+                &nbsp;|&nbsp; Prominent: <span style="background:#E2E8F0; padding:2px 6px; border-radius:4px; font-weight:600;">{prom_str}</span>
+                <span style="font-size:12px; color:#64748B; margin-left:8px;">(Data Completeness: {rolling_cpcb.get('valid_hours', 24)}/24h)</span>
+            </div>
+            <div style="font-size:12px; color:#334155;">
+                {prov_info['badge']}
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
         # Gauge & Pollutants Breakdown
         c_left, c_right = st.columns([1, 1])
 
         with c_left:
-            st.markdown(f"#### 🎯 Live AQI Gauge: {selected_display}")
-            gauge_fig = render_aqi_gauge(selected_display, city_data["aqi"])
+            st.markdown(f"#### 🎯 1-Hour Indicative AQI Gauge: {selected_display}")
+            disp_gauge_aqi = city_data.get("cpcb_aqi") if pd.notna(city_data.get("cpcb_aqi")) else city_data["aqi"]
+            gauge_fig = render_aqi_gauge(selected_display, disp_gauge_aqi)
             st.plotly_chart(gauge_fig, use_container_width=True, config={"displayModeBar": False})
 
             # Health recommendation card
+            cat_obj = get_aqi_category(disp_gauge_aqi)
             st.markdown(f"""
-            <div style="background-color:{category['bg_color']}; border-left: 5px solid {category['color']}; padding: 14px 18px; border-radius: 8px;">
-                <div style="font-weight:700; color:{category['text_color']}; font-size:14px; margin-bottom:4px;">
-                    Health Advisory — {category['label']} Air Quality
+            <div style="background-color:{cat_obj['bg_color']}; border-left: 5px solid {cat_obj['color']}; padding: 14px 18px; border-radius: 8px;">
+                <div style="font-weight:700; color:{cat_obj['text_color']}; font-size:14px; margin-bottom:4px;">
+                    Health Advisory — {cat_obj['label']} Air Quality
                 </div>
-                <div style="color:{category['text_color']}; font-size:13px; line-height:1.5;">
-                    {category['advisory']}
+                <div style="color:{cat_obj['text_color']}; font-size:13px; line-height:1.5;">
+                    {cat_obj['advisory']}
                 </div>
             </div>
             """, unsafe_allow_html=True)
@@ -350,7 +378,7 @@ def main():
             st.markdown("#### 🔬 Granular Pollutant Concentrations")
             bar_fig = render_pollutants_bar(city_data)
             st.plotly_chart(bar_fig, use_container_width=True, config={"displayModeBar": False})
-            st.caption("Metrics captured directly from ground-level monitoring stations (WAQI/CPCB feed).")
+            st.caption(f"📍 **Telemetry Provenance:** {prov_info['badge']} — {prov_info['tooltip']}. Calculation: {city_data.get('calculation_method', 'CPCB NAQI 2014')}.")
 
         # 24-Hour Trend Visualizer
         st.markdown("---")
@@ -503,6 +531,53 @@ def main():
                     """, unsafe_allow_html=True)
             else:
                 st.info("✅ All urban stations are currently operating within ±1.5σ normal statistical distribution.")
+
+        st.markdown("---")
+        st.markdown("### 🔬 Multi-Standard Scientific Laboratory: Why Do AQI Numbers Differ?")
+        st.markdown(
+            "Users frequently observe conflicting air quality numbers when comparing Google, Apple Weather, "
+            "IQAir, and Indian government CAAQMS monitors for the same city. This laboratory demonstrates "
+            "the scientific mechanics of mathematical breakpoint divergence and atmospheric modeling."
+        )
+
+        lab_c1, lab_c2 = st.columns([1, 2])
+        with lab_c1:
+            st.markdown("#### 🧪 Test Concentration")
+            sim_pm25 = st.slider(
+                "Simulated PM2.5 Concentration (µg/m³):",
+                min_value=5.0,
+                max_value=350.0,
+                value=35.0,
+                step=5.0,
+                help="Adjust PM2.5 to observe how Indian CPCB and US EPA mathematical interpolation diverged."
+            )
+            from common.cpcb_calculator import calculate_cpcb_subindex, calculate_us_epa_pm25_aqi
+            cpcb_sim = calculate_cpcb_subindex("pm25", sim_pm25)
+            us_sim, us_sim_cat, us_sim_color = calculate_us_epa_pm25_aqi(sim_pm25)
+            cpcb_cat_sim = get_aqi_category(cpcb_sim)
+
+            st.markdown(f"""
+            <div style="background:#F8FAFC; border:1px solid #CBD5E1; border-radius:8px; padding:12px; margin-top:8px;">
+                <div style="font-size:11px; font-weight:700; color:#64748B;">INDIAN CPCB NAQI (2014)</div>
+                <div style="font-size:24px; font-weight:800; color:{cpcb_cat_sim['color']};">{cpcb_sim} <span style="font-size:13px;">({cpcb_cat_sim['label']})</span></div>
+                <hr style="margin:8px 0; border:0; border-top:1px dashed #CBD5E1;">
+                <div style="font-size:11px; font-weight:700; color:#64748B;">US EPA AQI (2024 REVISION)</div>
+                <div style="font-size:24px; font-weight:800; color:{us_sim_color};">{us_sim} <span style="font-size:13px;">({us_sim_cat})</span></div>
+                <hr style="margin:8px 0; border:0; border-top:1px dashed #CBD5E1;">
+                <div style="font-size:11px; color:#475569;">WHO 2021 24h Threshold: <b>15 µg/m³</b> ({sim_pm25/15.0:.1f}x limit)</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        with lab_c2:
+            st.plotly_chart(render_standards_comparison_chart(sim_pm25), use_container_width=True, config={"displayModeBar": False})
+
+        with st.expander("🎓 MSc Capstone Viva Defense: Four Scientific Reasons for Divergence"):
+            st.markdown("""
+            1. **Different Breakpoint Conventions**: India's CPCB 2014 scale was designed for higher baseline particulate concentrations in South Asia (PM2.5 Satisfactory up to 60 µg/m³). The US EPA 2024 standard enforces a stricter limit (PM2.5 Moderate ceiling tightened to 35.4 µg/m³).
+            2. **Averaging Period Gate**: CPCB NAQI requires a 24-hour running arithmetic mean with $\ge 16$ valid hourly readings ($\ge 6$ hours for CO/O3). Instantaneous hourly readings shown on consumer apps do not reflect regulatory 24h compliance.
+            3. **Sensor Station vs Grid Model**: Physical CAAQMS stations measure localized air at a single GPS coordinate. Global models (such as Open-Meteo's ECMWF CAMS IFS-AER) simulate regional atmospheric transport across a ~45 km grid cell.
+            4. **Platform Discrepancies**: Google supports 70+ localized AQI systems; Apple utilizes BreezoMeter atmospheric algorithms; IQAir defaults to US EPA AQI. AirSense transparently presents both the official Indian regulatory CPCB NAQI and the 1-hour indicative index.
+            """)
 
     # ═══════════════════════════════════════════════════════════════════════════
     # VIEW 4: 48-HOUR AQI FORECAST

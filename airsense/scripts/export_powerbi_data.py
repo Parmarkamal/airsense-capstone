@@ -119,7 +119,8 @@ def extract_raw_readings(settings: dict[str, Any], limit: int = 5000) -> pd.Data
     if engine is not None:
         try:
             sql = f"""
-                SELECT time, city, station_id, data_source, aqi, pm25, pm10, no2, co, so2, o3, lat, lon
+                SELECT time, city, station_id, data_source, aqi, pm25, pm10, no2, co, so2, o3, lat, lon,
+                       cpcb_aqi, prominent_pollutant, source_type, station_operator
                 FROM aqi_readings
                 ORDER BY time DESC
                 LIMIT {limit};
@@ -180,6 +181,8 @@ def build_fact_aqi_readings(
         "TimeKey",
         "CityKey",
         "aqi",
+        "cpcb_aqi",
+        "prominent_pollutant",
         "pm25",
         "pm10",
         "no2",
@@ -188,10 +191,14 @@ def build_fact_aqi_readings(
         "o3",
         "CombustionRatio",
         "data_source",
+        "source_type",
+        "station_operator",
     ]
     available_cols = [c for c in fact_cols if c in df.columns]
     fact_df = df[available_cols].rename(columns={
         "aqi": "AQI",
+        "cpcb_aqi": "CPCB_AQI",
+        "prominent_pollutant": "ProminentPollutant",
         "pm25": "PM25",
         "pm10": "PM10",
         "no2": "NO2",
@@ -199,6 +206,8 @@ def build_fact_aqi_readings(
         "so2": "SO2",
         "o3": "O3",
         "data_source": "DataSource",
+        "source_type": "SourceType",
+        "station_operator": "StationOperator",
     })
     return fact_df
 

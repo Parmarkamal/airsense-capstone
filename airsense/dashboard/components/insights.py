@@ -506,3 +506,47 @@ def render_executive_scorecard(
             "help": f"Hours where PM2.5 exceeds WHO limit ({WHO_PM25_24H_LIMIT:.0f} µg/m³)",
         },
     ]
+
+
+def render_standards_comparison_chart(pm25_val: float) -> go.Figure:
+    """Render a comparative bar chart showing CPCB NAQI vs US EPA (2024) for identical PM2.5."""
+    from common.cpcb_calculator import calculate_cpcb_subindex, calculate_us_epa_pm25_aqi
+
+    cpcb_aqi = calculate_cpcb_subindex("pm25", pm25_val) or 0
+    us_aqi, us_cat, us_color = calculate_us_epa_pm25_aqi(pm25_val)
+    cpcb_cat = get_aqi_category(cpcb_aqi)
+
+    labels = ["Indian CPCB NAQI (2014)", "US EPA AQI (2024 Revision)"]
+    values = [cpcb_aqi, us_aqi or 0]
+    colors = [cpcb_cat["color"], us_color]
+    cats = [cpcb_cat["label"], us_cat]
+
+    fig = go.Figure(
+        go.Bar(
+            x=values,
+            y=labels,
+            orientation="h",
+            marker=dict(color=colors, cornerradius=8),
+            text=[f"<b>{v}</b> ({c})" for v, c in zip(values, cats)],
+            textposition="inside",
+            insidetextanchor="middle",
+            textfont=dict(color="#FFFFFF", size=14, family="Inter, sans-serif"),
+            hovertemplate="<b>%{y}</b><br>AQI Score: <b>%{x}</b><br>Category: %{text}<extra></extra>",
+        )
+    )
+
+    fig.update_layout(
+        title=dict(
+            text=f"<b>Dual Standards Divergence for PM2.5 = {pm25_val:.1f} µg/m³</b>",
+            font=dict(size=14, color="#1E293B"),
+            x=0,
+        ),
+        height=220,
+        margin=dict(l=10, r=20, t=40, b=20),
+        xaxis=dict(title="Index Value (Scale 0–500)", range=[0, 520], showgrid=True, gridcolor="#E2E8F0"),
+        yaxis=dict(title="", automargin=True),
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(248, 250, 252, 0.6)",
+        font={"family": "Inter, system-ui, sans-serif"},
+    )
+    return fig

@@ -380,41 +380,44 @@ increased vehicle congestion.
 # ── Phase 6: verified static fallbacks (used when RAG confidence is low) ──────
 AQI_CATEGORY_STATIC_FALLBACKS: dict[str, str] = {
     "Good": (
-        "**CPCB Category: Good (AQI 0–50).** Air quality is satisfactory with minimal "
-        "health impact. Outdoor activities including running, cycling, and sports are "
-        "appropriate for the general population (CPCB NAAQS / WHO protective guidance)."
+        "### 🌤️ Air Quality: Good (AQI 0–50)\n\n"
+        "• **Outdoor Activities:** Safe and unrestricted. Ideal for outdoor workouts, running, cycling, and sports.\n"
+        "• **Best Timing:** All times of day are suitable. Natural ventilation is encouraged.\n"
+        "• **Sensitive Groups:** No special restrictions required (CPCB NAQI / WHO 2021)."
     ),
     "Satisfactory": (
-        "**CPCB Category: Satisfactory (AQI 51–100).** Minor breathing discomfort may "
-        "occur for unusually sensitive people. Sensitive individuals should consider "
-        "reducing prolonged outdoor exertion (CPCB NAAQS advisory)."
+        "### 🌤️ Air Quality: Satisfactory (AQI 51–100)\n\n"
+        "• **Outdoor Activities:** Acceptable for most people. General population can carry on normal outdoor routines.\n"
+        "• **Best Timing:** Afternoon hours (12 PM – 4 PM) typically feature better vertical atmospheric dispersion than early mornings.\n"
+        "• **Sensitive Groups:** Unusually sensitive individuals (asthma, COPD) should monitor for minor throat irritation and avoid intense prolonged exertion (CPCB NAQI advisory)."
     ),
     "Moderate": (
-        "**CPCB Category: Moderate (AQI 101–200).** Breathing discomfort is likely for "
-        "people with lung disease, asthma, and heart disease. Children, elderly, and "
-        "patients should reduce prolonged outdoor exertion (CPCB NAAQS)."
+        "### ⚠️ Air Quality: Moderate (AQI 101–200)\n\n"
+        "• **Outdoor Activities:** Reduce prolonged or vigorous outdoor workouts (heavy cardio, marathon training).\n"
+        "• **Best Timing:** Midday to early afternoon (1 PM – 4 PM) when atmospheric mixing is highest. Avoid peak morning rush hour (7 AM – 9 AM) and late evening.\n"
+        "• **Sensitive Groups:** Children, seniors, and individuals with respiratory or heart conditions should limit outdoor time and keep quick-relief medication handy (CPCB NAQI)."
     ),
     "Poor": (
-        "**CPCB Category: Poor (AQI 201–300).** Breathing discomfort affects most people "
-        "on prolonged exposure. Avoid prolonged outdoor activity; wear a well-fitted "
-        "N95/FFP2 mask if outdoors; sensitive groups should prefer indoor environments "
-        "(CPCB NAAQS / GRAP Stage 1 guidance)."
+        "### 🚨 Air Quality: Poor (AQI 201–300)\n\n"
+        "• **Outdoor Activities:** Significantly limit outdoor exposure. Avoid strenuous outdoor physical exertion.\n"
+        "• **Best Timing:** If stepping outside is necessary, do so briefly during the warmest part of the afternoon. Wear a well-fitted N95/FFP2 respirator.\n"
+        "• **Sensitive Groups:** Keep windows closed; run HEPA air purifiers indoors. Vulnerable individuals should remain indoors (CPCB NAQI / GRAP Stage 1)."
     ),
     "Very Poor": (
-        "**CPCB Category: Very Poor (AQI 301–400).** Respiratory illness risk rises on "
-        "prolonged exposure. Avoid outdoor activities; people with existing disease "
-        "should remain indoors (CPCB NAAQS / GRAP Stage 2 guidance)."
+        "### 🛑 Air Quality: Very Poor (AQI 301–400)\n\n"
+        "• **Outdoor Activities:** Strictly avoid all outdoor physical exercise and discretionary outdoor trips.\n"
+        "• **Best Timing:** No outdoor time is recommended. High pollution persists throughout the day due to strong surface inversions.\n"
+        "• **Sensitive Groups:** Must remain indoors with air filtration. N95 masks mandatory for unavoidable outdoor transit (CPCB NAQI / GRAP Stage 2)."
     ),
     "Severe": (
-        "**CPCB Category: Severe (AQI 401+).** Affects healthy people and seriously "
-        "impacts those with existing disease. Restrict outdoor activity; follow local "
-        "GRAP emergency measures where applicable (CPCB NAAQS)."
+        "### ⛔ Air Quality: Severe (AQI 401+)\n\n"
+        "• **Emergency Health Warning:** Seriously impacts both healthy individuals and those with pre-existing conditions.\n"
+        "• **Outdoor Activities:** Absolute restriction on outdoor exposure. Keep indoor air sealed with active purification.\n"
+        "• **Sensitive Groups:** Seek medical attention immediately if experiencing acute chest tightness, wheezing, or shortness of breath (CPCB NAQI Emergency Guidance)."
     ),
     "No Data": (
-        "Live AQI for this city is currently unavailable. As a general precaution, "
-        "sensitive groups (children, elderly, asthma/COPD, heart disease) should limit "
-        "prolonged outdoor exertion until a verified reading is available "
-        "(WHO 2021 / CPCB NAAQS protective principle)."
+        "### ℹ️ Air Quality: Data Pending\n\n"
+        "• **Precautionary Advice:** Verified station readings are temporarily updating. Sensitive groups should exercise caution and avoid heavy prolonged exertion until fresh telemetry is confirmed (WHO 2021 / CPCB NAQI)."
     ),
 }
 
