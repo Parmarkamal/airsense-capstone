@@ -146,3 +146,4 @@ def test_render_executive_scorecard_structure(sample_raw_df):
     assert "Fleet Avg AQI" in labels
     assert "Most Polluted" in labels
     assert "Cleanest City" in labels
+

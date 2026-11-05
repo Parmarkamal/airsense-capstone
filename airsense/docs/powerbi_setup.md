@@ -210,3 +210,4 @@ AVERAGEX(
 ### Q3: When should an enterprise use DirectQuery vs Import Mode?
 **Examiner Answer**:
 > *"DirectQuery queries TimescaleDB in real time on every dashboard interaction. It is ideal when data updates continuously (sub-minute IoT streams) and the organization requires zero latency without data duplication. Import Mode ingests data into Power BI's in-memory VertiPaq engine, offering 10x to 100x faster DAX performance and full support for complex time-intelligence functions, but requires periodic scheduled refreshes. AirSense supports both modes."*
+

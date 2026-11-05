@@ -80,3 +80,100 @@
 2026-11-05 11:31:50 | INFO | airsense.fetch | VERIFY mumbai | source=Open-Meteo-Live | time=2026-11-05T06:00:00+00:00 | same_day=True | aqi=153.0
 2026-11-05 11:31:50 | INFO | airsense.fetch | Freshness summary: 6/6 cities have current-day timestamps
 2026-11-05 11:31:52 | ERROR | airsense.fetch | Cannot connect to Kafka at localhost:9092: NoBrokersAvailable
+2026-11-05 13:53:03 | INFO | airsense.replay | ============================================================
+2026-11-05 13:53:03 | INFO | airsense.replay |   AirSense Replay Mode — Offline Resilience Stream
+2026-11-05 13:53:03 | INFO | airsense.replay |   Mode: Direct DB
+2026-11-05 13:53:03 | INFO | airsense.replay |   Speed: instant
+2026-11-05 13:53:03 | INFO | airsense.replay | ============================================================
+2026-11-05 13:53:03 | INFO | airsense.replay | Loaded 1008 rows from backup CSV (6 cities)
+2026-11-05 13:53:03 | INFO | airsense.replay | Sliding timestamps applied: 2026-10-29 08:23 to 2026-11-05 07:23 (most recent ≈ 1h ago)
+2026-11-05 13:53:03 | INFO | airsense.replay | Prepared 1008 replay readings (data_source=Replay-Backup)
+2026-11-05 13:53:04 | INFO | airsense.replay | Direct DB mode — connecting to TimescaleDB...
+2026-11-05 13:53:04 | INFO | airsense.replay | Cleared 0 old replay rows from aqi_readings
+2026-11-05 13:53:05 | INFO | airsense.replay | Inserted 100/1008 replay readings...
+2026-11-05 13:53:06 | INFO | airsense.replay | Inserted 200/1008 replay readings...
+2026-11-05 13:53:07 | INFO | airsense.replay | Inserted 300/1008 replay readings...
+2026-11-05 13:53:08 | INFO | airsense.replay | Inserted 400/1008 replay readings...
+2026-11-05 13:53:08 | INFO | airsense.replay | Inserted 500/1008 replay readings...
+2026-11-05 13:53:09 | INFO | airsense.replay | Inserted 600/1008 replay readings...
+2026-11-05 13:53:10 | INFO | airsense.replay | Inserted 700/1008 replay readings...
+2026-11-05 13:53:12 | INFO | airsense.replay | Inserted 800/1008 replay readings...
+2026-11-05 13:53:13 | INFO | airsense.replay | Inserted 900/1008 replay readings...
+2026-11-05 13:53:14 | INFO | airsense.replay | Inserted 1000/1008 replay readings...
+2026-11-05 13:53:14 | INFO | airsense.replay | Direct DB insert complete: 1008 success, 0 failed
+2026-11-05 13:53:14 | INFO | airsense.replay | ============================================================
+2026-11-05 13:53:14 | INFO | airsense.replay |   Replay Complete!
+2026-11-05 13:53:14 | INFO | airsense.replay |   Published: 1008 | Failed: 0 | Total: 1008
+2026-11-05 13:53:14 | INFO | airsense.replay |   Database populated — launch dashboard to view replay data.
+2026-11-05 13:53:14 | INFO | airsense.replay | ============================================================
+2026-11-05 14:00:58 | WARNING | airsense.fetch | WAQI timestamp stale for ahmedabad (time=2026-06-23T10:00:00+05:30, >2h) — switching to Open-Meteo
+2026-11-05 14:00:59 | INFO | airsense.fetch | Fetched Ahmedabad (ahmedabad) AQI=97.0 source=Open-Meteo-Live time=2026-11-05T08:00:00+00:00
+2026-11-05 14:01:01 | WARNING | airsense.fetch | WAQI timestamp stale for bengaluru (time=2026-06-23T10:00:00+05:30, >2h) — switching to Open-Meteo
+2026-11-05 14:01:01 | INFO | airsense.fetch | Fetched Bengaluru (bengaluru) AQI=72.0 source=Open-Meteo-Live time=2026-11-05T08:00:00+00:00
+2026-11-05 14:01:03 | WARNING | airsense.fetch | WAQI timestamp stale for pune (time=2021-11-15T06:00:00+05:30, >2h) — switching to Open-Meteo
+2026-11-05 14:01:03 | INFO | airsense.fetch | Fetched Pune (pune) AQI=87.0 source=Open-Meteo-Live time=2026-11-05T08:00:00+00:00
+2026-11-05 14:01:05 | WARNING | airsense.fetch | WAQI timestamp stale for gandhinagar (time=2026-06-23T10:00:00+05:30, >2h) — switching to Open-Meteo
+2026-11-05 14:01:05 | INFO | airsense.fetch | Fetched Gandhinagar (gandhinagar) AQI=85.0 source=Open-Meteo-Live time=2026-11-05T08:00:00+00:00
+2026-11-05 14:01:06 | INFO | airsense.fetch | Fetched Delhi (delhi) AQI=295.0 source=WAQI time=2026-11-05T13:00:00+05:30
+2026-11-05 14:01:08 | WARNING | airsense.fetch | WAQI timestamp stale for mumbai (time=2025-03-04T06:00:00+05:30, >2h) — switching to Open-Meteo
+2026-11-05 14:01:08 | INFO | airsense.fetch | Fetched Mumbai (mumbai) AQI=202.0 source=Open-Meteo-Live time=2026-11-05T08:00:00+00:00
+2026-11-05 14:01:08 | INFO | airsense.fetch | VERIFY ahmedabad | source=Open-Meteo-Live | time=2026-11-05T08:00:00+00:00 | same_day=True | aqi=97.0
+2026-11-05 14:01:08 | INFO | airsense.fetch | VERIFY bengaluru | source=Open-Meteo-Live | time=2026-11-05T08:00:00+00:00 | same_day=True | aqi=72.0
+2026-11-05 14:01:08 | INFO | airsense.fetch | VERIFY pune | source=Open-Meteo-Live | time=2026-11-05T08:00:00+00:00 | same_day=True | aqi=87.0
+2026-11-05 14:01:08 | INFO | airsense.fetch | VERIFY gandhinagar | source=Open-Meteo-Live | time=2026-11-05T08:00:00+00:00 | same_day=True | aqi=85.0
+2026-11-05 14:01:08 | INFO | airsense.fetch | VERIFY delhi | source=WAQI | time=2026-11-05T13:00:00+05:30 | same_day=True | aqi=295.0
+2026-11-05 14:01:08 | INFO | airsense.fetch | VERIFY mumbai | source=Open-Meteo-Live | time=2026-11-05T08:00:00+00:00 | same_day=True | aqi=202.0
+2026-11-05 14:01:08 | INFO | airsense.fetch | Freshness summary: 6/6 cities have current-day timestamps
+2026-11-05 14:01:10 | ERROR | airsense.fetch | Cannot connect to Kafka at localhost:9092: NoBrokersAvailable
+2026-11-05 14:11:40 | WARNING | airsense.fetch | WAQI timestamp stale for ahmedabad (time=2026-06-23T10:00:00+05:30, >2h) — switching to Open-Meteo
+2026-11-05 14:11:40 | INFO | airsense.fetch | Fetched Ahmedabad (ahmedabad) AQI=97.0 source=Open-Meteo-Live time=2026-11-05T08:00:00+00:00
+2026-11-05 14:11:42 | WARNING | airsense.fetch | WAQI timestamp stale for bengaluru (time=2026-06-23T10:00:00+05:30, >2h) — switching to Open-Meteo
+2026-11-05 14:11:42 | INFO | airsense.fetch | Fetched Bengaluru (bengaluru) AQI=72.0 source=Open-Meteo-Live time=2026-11-05T08:00:00+00:00
+2026-11-05 14:11:43 | WARNING | airsense.fetch | WAQI timestamp stale for pune (time=2021-11-15T06:00:00+05:30, >2h) — switching to Open-Meteo
+2026-11-05 14:11:44 | INFO | airsense.fetch | Fetched Pune (pune) AQI=87.0 source=Open-Meteo-Live time=2026-11-05T08:00:00+00:00
+2026-11-05 14:11:45 | WARNING | airsense.fetch | WAQI timestamp stale for gandhinagar (time=2026-06-23T10:00:00+05:30, >2h) — switching to Open-Meteo
+2026-11-05 14:11:45 | INFO | airsense.fetch | Fetched Gandhinagar (gandhinagar) AQI=85.0 source=Open-Meteo-Live time=2026-11-05T08:00:00+00:00
+2026-11-05 14:11:47 | INFO | airsense.fetch | Fetched Delhi (delhi) AQI=243.0 source=WAQI time=2026-11-05T14:00:00+05:30
+2026-11-05 14:11:48 | WARNING | airsense.fetch | WAQI timestamp stale for mumbai (time=2025-03-04T06:00:00+05:30, >2h) — switching to Open-Meteo
+2026-11-05 14:11:49 | INFO | airsense.fetch | Fetched Mumbai (mumbai) AQI=202.0 source=Open-Meteo-Live time=2026-11-05T08:00:00+00:00
+2026-11-05 14:11:49 | INFO | airsense.fetch | VERIFY ahmedabad | source=Open-Meteo-Live | time=2026-11-05T08:00:00+00:00 | same_day=True | aqi=97.0
+2026-11-05 14:11:49 | INFO | airsense.fetch | VERIFY bengaluru | source=Open-Meteo-Live | time=2026-11-05T08:00:00+00:00 | same_day=True | aqi=72.0
+2026-11-05 14:11:49 | INFO | airsense.fetch | VERIFY pune | source=Open-Meteo-Live | time=2026-11-05T08:00:00+00:00 | same_day=True | aqi=87.0
+2026-11-05 14:11:49 | INFO | airsense.fetch | VERIFY gandhinagar | source=Open-Meteo-Live | time=2026-11-05T08:00:00+00:00 | same_day=True | aqi=85.0
+2026-11-05 14:11:49 | INFO | airsense.fetch | VERIFY delhi | source=WAQI | time=2026-11-05T14:00:00+05:30 | same_day=True | aqi=243.0
+2026-11-05 14:11:49 | INFO | airsense.fetch | VERIFY mumbai | source=Open-Meteo-Live | time=2026-11-05T08:00:00+00:00 | same_day=True | aqi=202.0
+2026-11-05 14:11:49 | INFO | airsense.fetch | Freshness summary: 6/6 cities have current-day timestamps
+2026-11-05 14:11:51 | WARNING | airsense.fetch | Kafka broker unavailable (NoBrokersAvailable). Falling back to direct TimescaleDB insertion...
+2026-11-05 14:11:51 | INFO | airsense.fetch | Direct DB mode: Inserting 6 live readings to TimescaleDB...
+2026-11-05 14:11:52 | INFO | airsense.fetch | Direct DB stored: ahmedabad | AQI=97.0 | source=Open-Meteo-Live
+2026-11-05 14:11:52 | INFO | airsense.fetch | Direct DB stored: bengaluru | AQI=72.0 | source=Open-Meteo-Live
+2026-11-05 14:11:52 | INFO | airsense.fetch | Direct DB stored: pune | AQI=87.0 | source=Open-Meteo-Live
+2026-11-05 14:11:52 | INFO | airsense.fetch | Direct DB stored: gandhinagar | AQI=85.0 | source=Open-Meteo-Live
+2026-11-05 14:11:52 | INFO | airsense.fetch | Direct DB stored: delhi | AQI=243.0 | source=WAQI
+2026-11-05 14:11:52 | INFO | airsense.fetch | Direct DB stored: mumbai | AQI=202.0 | source=Open-Meteo-Live
+2026-11-05 14:11:52 | INFO | airsense.fetch | Fetch complete — fetched=6 errors=0 stored/published=6 failed=0
+2026-11-05 14:15:30 | WARNING | airsense.fetch | WAQI timestamp stale for ahmedabad (time=2026-06-23T10:00:00+05:30, >2h) — switching to Open-Meteo
+2026-11-05 14:15:31 | INFO | airsense.fetch | Fetched Ahmedabad (ahmedabad) AQI=97.0 source=Open-Meteo-Live time=2026-11-05T08:00:00+00:00
+2026-11-05 14:15:32 | WARNING | airsense.fetch | WAQI timestamp stale for bengaluru (time=2026-06-23T10:00:00+05:30, >2h) — switching to Open-Meteo
+2026-11-05 14:15:33 | INFO | airsense.fetch | Fetched Bengaluru (bengaluru) AQI=72.0 source=Open-Meteo-Live time=2026-11-05T08:00:00+00:00
+2026-11-05 14:15:34 | WARNING | airsense.fetch | WAQI timestamp stale for pune (time=2021-11-15T06:00:00+05:30, >2h) — switching to Open-Meteo
+2026-11-05 14:15:34 | INFO | airsense.fetch | Fetched Pune (pune) AQI=87.0 source=Open-Meteo-Live time=2026-11-05T08:00:00+00:00
+2026-11-05 14:15:36 | WARNING | airsense.fetch | WAQI timestamp stale for gandhinagar (time=2026-06-23T10:00:00+05:30, >2h) — switching to Open-Meteo
+2026-11-05 14:15:36 | INFO | airsense.fetch | Fetched Gandhinagar (gandhinagar) AQI=85.0 source=Open-Meteo-Live time=2026-11-05T08:00:00+00:00
+2026-11-05 14:15:38 | INFO | airsense.fetch | Fetched Delhi (delhi) AQI=243.0 source=WAQI time=2026-11-05T14:00:00+05:30
+2026-11-05 14:15:39 | WARNING | airsense.fetch | WAQI timestamp stale for mumbai (time=2025-03-04T06:00:00+05:30, >2h) — switching to Open-Meteo
+2026-11-05 14:15:39 | INFO | airsense.fetch | Fetched Mumbai (mumbai) AQI=202.0 source=Open-Meteo-Live time=2026-11-05T08:00:00+00:00
+2026-11-05 14:15:39 | INFO | airsense.fetch | VERIFY ahmedabad | source=Open-Meteo-Live | time=2026-11-05T08:00:00+00:00 | same_day=True | aqi=97.0
+2026-11-05 14:15:39 | INFO | airsense.fetch | VERIFY bengaluru | source=Open-Meteo-Live | time=2026-11-05T08:00:00+00:00 | same_day=True | aqi=72.0
+2026-11-05 14:15:39 | INFO | airsense.fetch | VERIFY pune | source=Open-Meteo-Live | time=2026-11-05T08:00:00+00:00 | same_day=True | aqi=87.0
+2026-11-05 14:15:39 | INFO | airsense.fetch | VERIFY gandhinagar | source=Open-Meteo-Live | time=2026-11-05T08:00:00+00:00 | same_day=True | aqi=85.0
+2026-11-05 14:15:39 | INFO | airsense.fetch | VERIFY delhi | source=WAQI | time=2026-11-05T14:00:00+05:30 | same_day=True | aqi=243.0
+2026-11-05 14:15:39 | INFO | airsense.fetch | VERIFY mumbai | source=Open-Meteo-Live | time=2026-11-05T08:00:00+00:00 | same_day=True | aqi=202.0
+2026-11-05 14:15:39 | INFO | airsense.fetch | Freshness summary: 6/6 cities have current-day timestamps
+2026-11-05 14:15:40 | ERROR | airsense.fetch | Kafka publish failed for ahmedabad: [Error 6] NotLeaderForPartitionError
+2026-11-05 14:15:40 | ERROR | airsense.fetch | Kafka publish failed for bengaluru: [Error 6] NotLeaderForPartitionError
+2026-11-05 14:15:40 | ERROR | airsense.fetch | Kafka publish failed for pune: [Error 6] NotLeaderForPartitionError
+2026-11-05 14:15:40 | ERROR | airsense.fetch | Kafka publish failed for gandhinagar: [Error 6] NotLeaderForPartitionError
+2026-11-05 14:15:40 | ERROR | airsense.fetch | Kafka publish failed for delhi: [Error 6] NotLeaderForPartitionError
+2026-11-05 14:15:40 | ERROR | airsense.fetch | Kafka publish failed for mumbai: [Error 6] NotLeaderForPartitionError
+2026-11-05 14:15:40 | INFO | airsense.fetch | Fetch complete — fetched=6 errors=0 stored/published=0 failed=6

@@ -273,3 +273,4 @@ class TestRunAllChecks:
         assert "TimescaleDB" in names
         assert "Ollama LLM" in names
         assert "Ingestion Daemon" in names
+
