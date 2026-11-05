@@ -46,6 +46,14 @@ class AQIReading(BaseModel):
     so2:  float | None = Field(default=None, ge=0, le=2000)
     o3:   float | None = Field(default=None, ge=0, le=600)
 
+    # ── Scientific Provenance & CPCB NAQI (2014) Fields ──────────────────────
+    cpcb_aqi:              float | None = Field(default=None, ge=0, le=500)
+    prominent_pollutant:   str | None   = Field(default=None, max_length=32)
+    source_type:           str | None   = Field(default=None, max_length=64)
+    station_operator:      str | None   = Field(default=None, max_length=128)
+    calculation_method:    str | None   = Field(default=None, max_length=64)
+    observation_age_hours: float | None = Field(default=None, ge=0)
+
     # ── Timestamp validation ─────────────────────────────────────────────────
     @field_validator("time", mode="before")
     @classmethod
@@ -98,23 +106,29 @@ class AQIReading(BaseModel):
     def to_db_dict(self) -> dict[str, Any]:
         """Return a flat dict ready for SQLAlchemy insert."""
         return {
-            "time":              self.time,
-            "city":              self.city,
-            "city_display_name": self.city_display_name,
-            "station_id":        self.station_id,
-            "country":           self.country,
-            "aqi":               self.aqi,
-            "pm25":              self.pm25,
-            "pm10":              self.pm10,
-            "no2":               self.no2,
-            "co":                self.co,
-            "so2":               self.so2,
-            "o3":                self.o3,
-            "lat":               self.lat,
-            "lon":               self.lon,
-            "data_source":       self.data_source,
-            "schema_version":    self.schema_version,
-            "fetched_at":        self.fetched_at,
+            "time":                  self.time,
+            "city":                  self.city,
+            "city_display_name":     self.city_display_name,
+            "station_id":            self.station_id,
+            "country":               self.country,
+            "aqi":                   self.aqi,
+            "pm25":                  self.pm25,
+            "pm10":                  self.pm10,
+            "no2":                   self.no2,
+            "co":                    self.co,
+            "so2":                   self.so2,
+            "o3":                    self.o3,
+            "lat":                   self.lat,
+            "lon":                   self.lon,
+            "data_source":           self.data_source,
+            "schema_version":        self.schema_version,
+            "fetched_at":            self.fetched_at,
+            "cpcb_aqi":              self.cpcb_aqi,
+            "prominent_pollutant":   self.prominent_pollutant,
+            "source_type":           self.source_type,
+            "station_operator":      self.station_operator,
+            "calculation_method":    self.calculation_method,
+            "observation_age_hours": self.observation_age_hours,
         }
 
 

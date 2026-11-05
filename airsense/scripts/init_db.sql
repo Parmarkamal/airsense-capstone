@@ -32,7 +32,13 @@ CREATE TABLE IF NOT EXISTS aqi_readings (
     lon                 DOUBLE PRECISION,
     data_source         TEXT               DEFAULT 'WAQI',
     schema_version      TEXT               DEFAULT '1.0',
-    fetched_at          TIMESTAMPTZ        DEFAULT NOW()
+    fetched_at          TIMESTAMPTZ        DEFAULT NOW(),
+    cpcb_aqi            DOUBLE PRECISION,
+    prominent_pollutant VARCHAR(32),
+    source_type         VARCHAR(64),
+    station_operator    VARCHAR(128),
+    calculation_method  VARCHAR(64),
+    observation_age_hours DOUBLE PRECISION
 );
 
 -- Convert to TimescaleDB hypertable (1-day chunks = fast queries, tiny footprint)

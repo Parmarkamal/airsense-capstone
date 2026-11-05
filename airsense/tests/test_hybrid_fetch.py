@@ -83,6 +83,11 @@ class TestOpenMeteoParser:
         assert reading["schema_version"] == "1.0"
         assert reading["lat"] == DELHI.lat
         assert reading["lon"] == DELHI.lon
+        assert reading["source_type"] == "atmospheric_model"
+        assert "ECMWF / CAMS" in reading["station_operator"]
+        assert reading["calculation_method"] == "CPCB_NAQI_2014_IITK"
+        assert reading["cpcb_aqi"] is not None
+        assert reading["co"] == 0.18  # 180 ug/m3 converted to 0.18 mg/m3
 
 
 class TestHybridFallback:

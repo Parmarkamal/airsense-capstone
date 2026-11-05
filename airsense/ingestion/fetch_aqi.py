@@ -34,6 +34,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from common.config import CityConfig, get_cities, load_settings, require_waqi_token
+from common.cpcb_calculator import calculate_cpcb_naqi, convert_co_ug_to_mg
 from common.logging_setup import setup_logging
 
 SCHEMA_VERSION = "1.0"
@@ -135,7 +136,28 @@ def fetch_open_meteo_reading(
             f"Open-Meteo reading for {city.slug} has neither us_aqi nor pm2_5"
         )
 
+    pm10 = _as_float(current.get("pm10"))
+    no2 = _as_float(current.get("nitrogen_dioxide"))
+    co_raw = _as_float(current.get("carbon_monoxide"))
+    co_mg = convert_co_ug_to_mg(co_raw)
+    so2 = _as_float(current.get("sulphur_dioxide"))
+    o3 = _as_float(current.get("ozone"))
+
+    # Compute CPCB NAQI (1-hour indicative snapshot)
+    cpcb_result = calculate_cpcb_naqi(
+        {
+            "pm25": pm25,
+            "pm10": pm10,
+            "no2": no2,
+            "co": co_mg,
+            "so2": so2,
+            "o3": o3,
+        },
+        is_indicative=True,
+    )
+
     obs_time = _parse_iso_to_utc(current.get("time")) or datetime.now(timezone.utc)
+    obs_age = max(0.0, (datetime.now(timezone.utc) - obs_time).total_seconds() / 3600.0)
 
     return {
         "schema_version": SCHEMA_VERSION,
@@ -146,15 +168,21 @@ def fetch_open_meteo_reading(
         "country": "IN",
         "aqi": aqi,
         "pm25": pm25,
-        "pm10": _as_float(current.get("pm10")),
-        "no2": _as_float(current.get("nitrogen_dioxide")),
-        "co": _as_float(current.get("carbon_monoxide")),
-        "so2": _as_float(current.get("sulphur_dioxide")),
-        "o3": _as_float(current.get("ozone")),
+        "pm10": pm10,
+        "no2": no2,
+        "co": co_mg if co_mg is not None else co_raw,
+        "so2": so2,
+        "o3": o3,
         "lat": float(city.lat),
         "lon": float(city.lon),
         "data_source": "Open-Meteo-Live",
         "fetched_at": datetime.now(timezone.utc).isoformat(),
+        "cpcb_aqi": cpcb_result.get("aqi"),
+        "prominent_pollutant": cpcb_result.get("prominent_pollutant"),
+        "source_type": "atmospheric_model",
+        "station_operator": "ECMWF / CAMS IFS-AER (~45km)",
+        "calculation_method": "CPCB_NAQI_2014_IITK",
+        "observation_age_hours": round(obs_age, 2),
     }
 
 
@@ -187,24 +215,60 @@ def _fetch_waqi_reading(
         except (TypeError, ValueError):
             pass
 
+    pm25 = _parse_pollutant(iaqi, "pm25")
+    pm10 = _parse_pollutant(iaqi, "pm10")
+    no2 = _parse_pollutant(iaqi, "no2")
+    co = _parse_pollutant(iaqi, "co")
+    so2 = _parse_pollutant(iaqi, "so2")
+    o3 = _parse_pollutant(iaqi, "o3")
+
+    co_mg = convert_co_ug_to_mg(co) if (co is not None and co > 50.0) else co
+
+    cpcb_result = calculate_cpcb_naqi(
+        {
+            "pm25": pm25,
+            "pm10": pm10,
+            "no2": no2,
+            "co": co_mg,
+            "so2": so2,
+            "o3": o3,
+        },
+        is_indicative=True,
+    )
+
+    attributions = data.get("attributions") or []
+    operator_name = "CPCB / SPCB Ground Station"
+    if attributions and isinstance(attributions, list) and attributions[0].get("name"):
+        operator_name = attributions[0]["name"]
+
+    raw_ts = _parse_timestamp(data)
+    obs_time = _parse_iso_to_utc(raw_ts) or datetime.now(timezone.utc)
+    obs_age = max(0.0, (datetime.now(timezone.utc) - obs_time).total_seconds() / 3600.0)
+
     return {
         "schema_version": SCHEMA_VERSION,
-        "time": _parse_timestamp(data),
+        "time": raw_ts,
         "station_id": _station_id(data, city),
         "city": city.slug,
         "city_display_name": city.display_name,
         "country": "IN",
         "aqi": float(data["aqi"]) if data.get("aqi") is not None else None,
-        "pm25": _parse_pollutant(iaqi, "pm25"),
-        "pm10": _parse_pollutant(iaqi, "pm10"),
-        "no2": _parse_pollutant(iaqi, "no2"),
-        "co": _parse_pollutant(iaqi, "co"),
-        "so2": _parse_pollutant(iaqi, "so2"),
-        "o3": _parse_pollutant(iaqi, "o3"),
+        "pm25": pm25,
+        "pm10": pm10,
+        "no2": no2,
+        "co": co_mg if co_mg is not None else co,
+        "so2": so2,
+        "o3": o3,
         "lat": float(data.get("lat") or lat),
         "lon": float(data.get("lon") or lon),
         "data_source": "WAQI",
         "fetched_at": datetime.now(timezone.utc).isoformat(),
+        "cpcb_aqi": cpcb_result.get("aqi"),
+        "prominent_pollutant": cpcb_result.get("prominent_pollutant"),
+        "source_type": "ground_station",
+        "station_operator": operator_name,
+        "calculation_method": "CPCB_NAQI_2014_IITK",
+        "observation_age_hours": round(obs_age, 2),
     }
 
 

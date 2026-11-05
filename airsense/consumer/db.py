@@ -58,6 +58,12 @@ aqi_readings_table = Table(
     Column("data_source",       String(32),              default="WAQI"),
     Column("schema_version",    String(16),              default="1.0"),
     Column("fetched_at",        DateTime(timezone=True)),
+    Column("cpcb_aqi",          Double()),
+    Column("prominent_pollutant", String(32)),
+    Column("source_type",       String(64)),
+    Column("station_operator",  String(128)),
+    Column("calculation_method", String(64)),
+    Column("observation_age_hours", Double()),
 )
 
 aqi_validation_errors_table = Table(
@@ -133,6 +139,18 @@ def ensure_tables_exist(engine: Engine) -> None:
         )
     else:
         logger.info("All required tables confirmed present in database.")
+
+    # Apply non-destructive schema migrations for CPCB NAQI & provenance fields
+    try:
+        with engine.begin() as conn:
+            conn.execute(text("ALTER TABLE aqi_readings ADD COLUMN IF NOT EXISTS cpcb_aqi DOUBLE PRECISION;"))
+            conn.execute(text("ALTER TABLE aqi_readings ADD COLUMN IF NOT EXISTS prominent_pollutant VARCHAR(32);"))
+            conn.execute(text("ALTER TABLE aqi_readings ADD COLUMN IF NOT EXISTS source_type VARCHAR(64);"))
+            conn.execute(text("ALTER TABLE aqi_readings ADD COLUMN IF NOT EXISTS station_operator VARCHAR(128);"))
+            conn.execute(text("ALTER TABLE aqi_readings ADD COLUMN IF NOT EXISTS calculation_method VARCHAR(64);"))
+            conn.execute(text("ALTER TABLE aqi_readings ADD COLUMN IF NOT EXISTS observation_age_hours DOUBLE PRECISION;"))
+    except SQLAlchemyError as exc:
+        logger.warning("Auto-migration check skipped or failed: %s", exc)
 
 
 def insert_reading(engine: Engine, row: dict[str, Any]) -> None:
