@@ -45,10 +45,10 @@ Phase 1: Real-Time Streaming Data Pipeline      [██████████�
 Phase 2: Interactive Visual Analytics & GIS Map [████████████████████] 100% ✅ COMPLETE
 Phase 3: LightGBM 48-Hour Machine Learning      [████████████████████] 100% ✅ COMPLETE
 Phase 4: RAG AI Health Advisory System          [████████████████████] 100% ✅ COMPLETE
-Phase 5: Real-Time Data Integrity & Live Truth  [████████████████████] 100% ✅ COMPLETE
-Phase 6: Grounded AI Safety & Domain Guardrails [░░░░░░░░░░░░░░░░░░░░]   0% ⏳ STARTING HERE
-Phase 7: ML Explainability (SHAP) & Baselines   [░░░░░░░░░░░░░░░░░░░░]   0% ⏳ PLANNED
-Phase 8: Offline Resilience & Demo Replay Mode  [░░░░░░░░░░░░░░░░░░░░]   0% ⏳ PLANNED
+Phase 5: Real-Time Data Integrity & Live Truth  [████████████████████] 100% ✅ COMPLETE (41/41 Tests)
+Phase 6: Grounded AI Safety & Domain Guardrails [████████████████████] 100% ✅ COMPLETE (50/50 Tests)
+Phase 7: ML Explainability (SHAP) & Baselines   [████████████████████] 100% ✅ COMPLETE (60/60 Tests)
+Phase 8: Offline Resilience & Demo Replay Mode  [░░░░░░░░░░░░░░░░░░░░]   0% ⏳ NEXT UP
 Phase 9: Business Intelligence (BI & Power BI)  [████████████░░░░░░░░]  60% ⏳ IN PROGRESS
 Phase 10: System Observability & Viva Readiness [░░░░░░░░░░░░░░░░░░░░]   0% ⏳ FINAL SPRINT
 ```
@@ -116,23 +116,23 @@ Pune           18.5204° N, 73.8567° E   2026-10-30 17:00 IST    118      23.6 
 - **Tests:** `tests/test_hybrid_fetch.py` (9 new) + prior suite = **41 passed**.
 
 ### PHASE 6: Grounded AI Safety & Domain Guardrails
-**Status:** `⏳ PLANNED (Priority 2)`
+**Status:** `✅ 100% COMPLETE (50/50 Tests Passing)`
 - **Task 6.1:** Inject current live AQI, PM2.5, and city name into LLM prompt context.
 - **Task 6.2:** Add **Out-of-Domain Guardrail** (reject non-environmental queries politely).
 - **Task 6.3:** Add **Medical Refusal Guardrail** (refuse prescriptions/diagnosis; cite WHO/CPCB).
-- **Task 6.4:** Add **Confidence Thresholding** (decline when cosine distance > 0.75).
-- **Task 6.5 (NEW BEAST UPGRADE):** **Persona-Based Health Advisories**: 4 quick-select buttons in the UI:
+- **Task 6.4:** Add **Confidence Thresholding** (decline when cosine distance > 0.45; fallback to static WHO guidance).
+- **Task 6.5:** **Persona-Based Health Advisories**: 4 quick-select buttons in the UI:
   - 🏃 *Runner / Athlete* (high exertion volume)
   - 🫁 *Asthma / COPD Patient* (hyper-reactive airways)
   - 👴 *Elderly (65+)* (cardiovascular vulnerability)
   - 👶 *Parent with Infant* (developing lungs)
 
 ### PHASE 7: Machine Learning Reliability & Explainable AI (SHAP)
-**Status:** `⏳ PLANNED (Priority 3)`
-- **Task 7.1:** Fix Train-Serve Skew in `ml/training/predict_forecast.py` (use real DB pollutant values).
-- **Task 7.2:** Benchmark Forecast against Persistence & Daily Seasonal Baselines.
-- **Task 7.3:** Add Explainable AI (XAI) with SHAP TreeExplainer feature contribution waterfall.
-- **Task 7.4 (NEW BEAST UPGRADE):** **Expanding Horizon Confidence Cone**: Dynamically widen uncertainty bands ($\sigma_h = \text{RMSE} \cdot \sqrt{1 + 0.05 \cdot h}$) from $\pm 7.6$ at Hour 1 to $\pm 14.2$ at Hour 48, reflecting growing forecast variance.
+**Status:** `✅ 100% COMPLETE (60/60 Tests Passing)`
+- **Task 7.1:** Fixed Train-Serve Skew in `ml/training/predict_forecast.py` (ddof=1 rolling std, real pollutant series, backward fill for <24 points).
+- **Task 7.2:** Benchmark Forecast against Persistence (RMSE=58.52) & Daily Seasonal (RMSE=54.03) Baselines. LightGBM (RMSE=7.61) decisively outperforms.
+- **Task 7.3:** Added Explainable AI (XAI) with native LightGBM TreeSHAP (`pred_contrib=True`) feature importance bar chart.
+- **Task 7.4:** **Expanding Horizon Confidence Cone**: Dual expanding bands ($\pm 1\sigma$ at 68% and $\pm 2\sigma$ at 95% opacity) scaling with $\sqrt{h}$ up to $6.93\times$ at step 48.
 
 ### PHASE 8: Offline Resilience & Demo Replay Mode
 **Status:** `⏳ PLANNED (Priority 4)`
