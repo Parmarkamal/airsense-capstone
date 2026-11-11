@@ -570,3 +570,59 @@ def render_standards_comparison_chart(pm25_val: float) -> go.Figure:
         font={"family": "Inter, system-ui, sans-serif"},
     )
     return fig
+
+
+def generate_cpcb_compliance_report(df_latest: pd.DataFrame) -> pd.DataFrame:
+    """
+    Generate an executive CPCB NAAQS (2009) and WHO (2021) compliance audit report.
+    Evaluates 24h statutory thresholds and produces actionable demographic advisories.
+    """
+    rows = []
+    for _, r in df_latest.iterrows():
+        city_name = r.get("city_display_name", r.get("city", "Unknown"))
+        eff_aqi = r.get("cpcb_aqi") or r.get("aqi", 0.0)
+        pm25 = r.get("pm25")
+        pm10 = r.get("pm10")
+        prom = r.get("prominent_pollutant") or "PM2.5"
+
+        # CPCB 24h statutory standards: PM2.5 <= 60 µg/m³, PM10 <= 100 µg/m³
+        pm25_stat = f"{pm25:.1f} µg/m³ (" + ("✅ Compliant" if pm25 <= 60 else f"⚠️ +{((pm25-60)/60)*100:.0f}% Over") + ")" if pd.notna(pm25) else "N/A"
+        pm10_stat = f"{pm10:.1f} µg/m³ (" + ("✅ Compliant" if pm10 <= 100 else f"⚠️ +{((pm10-100)/100)*100:.0f}% Over") + ")" if pd.notna(pm10) else "N/A"
+
+        # WHO 2021 24h Guideline (15 µg/m³) multiplier
+        who_factor = f"{pm25 / 15.0:.1f}× WHO Limit" if pd.notna(pm25) else "N/A"
+
+        # Actionable Demographic Advisories
+        if eff_aqi <= 50:
+            school_adv = "Outdoor sports normal"
+            elderly_adv = "Safe for morning walks"
+            patient_adv = "Normal outdoor activities"
+        elif eff_aqi <= 100:
+            school_adv = "Normal outdoor recess"
+            elderly_adv = "Comfortable; normal routines"
+            patient_adv = "Keep rescue inhalers accessible"
+        elif eff_aqi <= 200:
+            school_adv = "Limit intense outdoor drills"
+            elderly_adv = "Avoid strenuous morning walks"
+            patient_adv = "Wear N95 mask outdoors; reduce exertion"
+        elif eff_aqi <= 300:
+            school_adv = "Indoor recess recommended"
+            elderly_adv = "Remain indoors; close street windows"
+            patient_adv = "High risk; N95 mask mandatory outdoors"
+        else:
+            school_adv = "Cancel outdoor sports / Online alerts"
+            elderly_adv = "Stay strictly indoors; air purifiers advised"
+            patient_adv = "Emergency alert; avoid all exposure"
+
+        rows.append({
+            "City": city_name,
+            "CPCB NAQI": f"{eff_aqi:.0f}",
+            "Key Pollutant": prom,
+            "PM2.5 vs NAAQS (60 µg/m³)": pm25_stat,
+            "PM10 vs NAAQS (100 µg/m³)": pm10_stat,
+            "WHO 2021 Multiplier": who_factor,
+            "Schools & Children": school_adv,
+            "Senior Citizens (65+)": elderly_adv,
+            "Cardio-Respiratory Patients": patient_adv,
+        })
+    return pd.DataFrame(rows)

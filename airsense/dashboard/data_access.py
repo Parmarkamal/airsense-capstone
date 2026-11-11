@@ -32,6 +32,32 @@ from common.cpcb_calculator import (
 logger = logging.getLogger("airsense.dashboard.data")
 
 
+def format_human_duration(total_seconds: float) -> str:
+    """
+    Format a time delta into clean, human-friendly natural English.
+    Examples:
+      - < 2 mins:  'just now'
+      - 45 mins:   '45 mins ago'
+      - 75 mins:   '1 hr 15 mins ago'
+      - 150 mins:  '2 hrs 30 mins ago'
+      - 24 hrs+:   '1 day ago' / 'X days ago'
+    """
+    if total_seconds < 0:
+        total_seconds = 0.0
+    mins = int(round(total_seconds / 60.0))
+    if mins < 2:
+        return "just now"
+    if mins < 60:
+        return f"{mins} mins ago"
+
+    hours = mins // 60
+    rem_mins = mins % 60
+    h_str = "1 hr" if hours == 1 else f"{hours} hrs"
+    if rem_mins == 0:
+        return f"{h_str} ago"
+    return f"{h_str} {rem_mins} mins ago"
+
+
 def calculate_data_freshness(
     reading_time: datetime | None,
 ) -> tuple[str, str, float]:
@@ -41,8 +67,8 @@ def calculate_data_freshness(
 
     Returns:
         (badge_color, label, age_in_hours)
-        - < 2.5 hours:  ("green", "🟢 Live (<2.5h old)", age)
-        - 2.5–6 hours: ("gold",  "🟡 Delayed (2.5-6h old)", age)
+        - < 2.5 hours:  ("green", "🟢 Live (10:30 PM IST · 45 mins ago)", age)
+        - 2.5–6 hours: ("gold",  "🟡 Delayed (08:30 PM IST · 2 hrs 30 mins ago)", age)
         - > 6 hours:   ("red",   "🔴 Stale (>6h old)", age)
     """
     if reading_time is None or (isinstance(reading_time, float) and pd.isna(reading_time)):
@@ -59,18 +85,18 @@ def calculate_data_freshness(
     else:
         reading_time = reading_time.astimezone(timezone.utc)
 
-    age_hours = (datetime.now(timezone.utc) - reading_time).total_seconds() / 3600.0
-    if age_hours < 0:
-        age_hours = 0.0
+    diff_sec = max(0.0, (datetime.now(timezone.utc) - reading_time).total_seconds())
+    age_hours = diff_sec / 3600.0
+    time_ago_str = format_human_duration(diff_sec)
 
     # Display local Indian Standard Time (IST, UTC+5:30) for clear human recognition
     ist_time_str = reading_time.astimezone(IST).strftime("%I:%M %p IST")
 
     if age_hours < 2.5:
-        return ("green", f"🟢 Live ({ist_time_str} · {age_hours:.1f}h ago)", age_hours)
+        return ("green", f"🟢 Live ({ist_time_str} · {time_ago_str})", age_hours)
     if age_hours <= 6.0:
-        return ("gold", f"🟡 Delayed ({ist_time_str} · {age_hours:.1f}h ago)", age_hours)
-    return ("red", f"🔴 Stale ({ist_time_str} · {age_hours:.1f}h ago)", age_hours)
+        return ("gold", f"🟡 Delayed ({ist_time_str} · {time_ago_str})", age_hours)
+    return ("red", f"🔴 Stale ({ist_time_str} · {time_ago_str})", age_hours)
 
 
 def get_provenance_badge(row: pd.Series | dict[str, Any]) -> dict[str, str]:
