@@ -63,7 +63,10 @@ def render_combined_forecast_chart(
     if not actual_df.empty:
         act = actual_df.copy()
         act["time"] = pd.to_datetime(act["time"])
-        act = act.sort_values(by="time").tail(24)  # Focus on last 24h
+        act = act.sort_values(by="time")
+        latest_act_time = act["time"].iloc[-1]
+        # Focus strictly on recent contiguous readings (last 28 hours) to prevent cross-day gaps
+        act = act[act["time"] >= (latest_act_time - pd.Timedelta(hours=28))].reset_index(drop=True)
 
         fig.add_trace(
             go.Scatter(
@@ -73,6 +76,7 @@ def render_combined_forecast_chart(
                 name="Actual AQI (Historical)",
                 line=dict(color="#2563EB", width=3),
                 marker=dict(size=6, color="#1D4ED8"),
+                connectgaps=False,
                 hovertemplate="<b>Actual</b>: %{y:.1f} AQI<br>%{x|%b %d, %H:%M}<extra></extra>",
             )
         )
@@ -86,7 +90,7 @@ def render_combined_forecast_chart(
         # Connect seamlessly from the last actual point if available and contiguous (<=6h gap)
         conn_x = list(fc["forecast_time"])
         conn_y = list(fc["predicted_aqi"])
-        if not actual_df.empty:
+        if not actual_df.empty and not act.empty:
             last_actual_time = act["time"].iloc[-1]
             last_actual_val = act["aqi"].iloc[-1]
             time_gap = (fc["forecast_time"].iloc[0] - last_actual_time).total_seconds() / 3600.0

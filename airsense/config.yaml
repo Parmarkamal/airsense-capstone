@@ -5,7 +5,7 @@ kafka:
   bootstrap_servers: "localhost:9092"
   topic_raw: "aqi_raw"
   group_id: "airsense_consumer"
-  producer_acks: "all"
+  producer_acks: 1
   request_timeout_ms: 30000
 
 database:

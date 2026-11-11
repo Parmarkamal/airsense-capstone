@@ -220,32 +220,41 @@ def render_history_trend(history_df: pd.DataFrame, city_name: str) -> go.Figure:
         fig.update_layout(height=270, paper_bgcolor="rgba(0,0,0,0)")
         return fig
 
+    # Focus strictly on the contiguous 24-hour window relative to the latest reading
+    df = history_df.copy()
+    df["time"] = pd.to_datetime(df["time"])
+    df = df.sort_values(by="time")
+    latest_time = df["time"].iloc[-1]
+    df = df[df["time"] >= (latest_time - pd.Timedelta(hours=28))].reset_index(drop=True)
+
     fig = go.Figure()
 
     # AQI Line
     fig.add_trace(
         go.Scatter(
-            x=history_df["time"],
-            y=history_df["aqi"],
+            x=df["time"],
+            y=df["aqi"],
             mode="lines+markers",
             name="AQI",
             line=dict(color="#3B82F6", width=2.5, shape="spline"),
             marker=dict(size=6, color="#1D4ED8", symbol="circle"),
             fill="tozeroy",
             fillcolor="rgba(59, 130, 246, 0.08)",
+            connectgaps=False,
             hovertemplate="<b>%{x|%b %d, %H:%M}</b><br>AQI: <b>%{y:.1f}</b><extra></extra>",
         )
     )
 
     # Optional PM2.5 trace if available
-    if "pm25" in history_df.columns and history_df["pm25"].notna().any():
+    if "pm25" in df.columns and df["pm25"].notna().any():
         fig.add_trace(
             go.Scatter(
-                x=history_df["time"],
-                y=history_df["pm25"],
+                x=df["time"],
+                y=df["pm25"],
                 mode="lines",
                 name="PM2.5 (µg/m³)",
                 line=dict(color="#EF4444", width=1.5, dash="dot"),
+                connectgaps=False,
                 hovertemplate="PM2.5: <b>%{y:.1f} µg/m³</b><extra></extra>",
             )
         )

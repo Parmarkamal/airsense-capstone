@@ -255,26 +255,34 @@ def get_city_rolling_cpcb_aqi(engine: Engine, city_slug: str) -> dict[str, Any]:
 def get_city_history(engine: Engine, city_slug: str, limit: int = 48) -> pd.DataFrame:
     """
     Fetch recent chronological readings for a specific city.
-    Returns DataFrame sorted chronologically (time ASC).
+    Restricts results strictly to the contiguous recent period (last 28 hours
+    relative to the latest reading) so old historical clusters from weeks ago
+    are never joined across multi-day voids.
     """
     query = text("""
+        WITH latest AS (
+            SELECT MAX(time) AS max_time
+            FROM aqi_readings
+            WHERE city = :city_slug
+        )
         SELECT
-            time,
-            aqi,
-            pm25,
-            pm10,
-            no2,
-            co,
-            so2,
-            o3
-        FROM aqi_readings
-        WHERE city = :city_slug
-        ORDER BY time DESC
-        LIMIT :limit;
+            r.time,
+            r.aqi,
+            r.pm25,
+            r.pm10,
+            r.no2,
+            r.co,
+            r.so2,
+            r.o3
+        FROM aqi_readings r, latest
+        WHERE r.city = :city_slug
+          AND latest.max_time IS NOT NULL
+          AND r.time >= latest.max_time - INTERVAL '28 hours'
+        ORDER BY r.time ASC;
     """)
     try:
         with engine.connect() as conn:
-            df = pd.read_sql(query, conn, params={"city_slug": city_slug, "limit": limit})
+            df = pd.read_sql(query, conn, params={"city_slug": city_slug})
         if not df.empty:
             df = df.sort_values(by="time", ascending=True).reset_index(drop=True)
         return df
