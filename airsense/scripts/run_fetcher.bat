@@ -33,10 +33,19 @@ python ingestion\fetch_aqi.py
 IF %ERRORLEVEL% EQU 0 (
     echo.
     echo [AirSense] Fetch completed successfully.
+    IF EXIST "scripts\export_powerbi_data.py" (
+        echo [AirSense] Refreshing Power BI datasets...
+        python scripts\export_powerbi_data.py
+    )
 ) ELSE IF %ERRORLEVEL% EQU 2 (
     echo.
     echo [WARN] Fetch completed but some cities failed to publish to Kafka.
     echo        Check logs\airsense.log for details.
+    IF EXIST "scripts\export_powerbi_data.py" (
+        echo [AirSense] Refreshing Power BI datasets...
+        python scripts\export_powerbi_data.py
+    )
+)
 ) ELSE (
     echo.
     echo [ERROR] Fetch failed! Check logs\airsense.log for details.

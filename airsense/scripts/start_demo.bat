@@ -29,9 +29,10 @@ REM ── Step 2: Check Kafka broker ──────────────
 echo [CHECK] Testing Kafka broker on localhost:9092...
 python -c "from kafka import KafkaAdminClient; c=KafkaAdminClient(bootstrap_servers='localhost:9092',request_timeout_ms=5000); c.close(); print('[OK] Kafka is running.')" 2>nul
 IF %ERRORLEVEL% NEQ 0 (
-    echo [ERROR] Cannot reach Kafka on localhost:9092.
-    echo         Please start ZooKeeper and Kafka first, then re-run this script.
-    pause & exit /b 1
+    echo [INFO] Kafka is offline. Launching ZooKeeper and Kafka stack...
+    call scripts\start_kafka_stack.bat
+) ELSE (
+    echo [OK] Kafka is running.
 )
 
 REM ── Step 3: Check Docker / TimescaleDB ──────────────────────────────────────
@@ -56,18 +57,23 @@ REM Give consumer 3 seconds to connect before fetching
 timeout /t 3 /nobreak >nul
 
 REM ── Step 5: Run first fetch ──────────────────────────────────────────────────
-echo [AirSense] Running first AQI fetch now...
+echo [AirSense] Running live AQI fetch & model forecast projection now...
 call scripts\run_fetcher.bat
+
+REM ── Step 6: Launch Streamlit Dashboard ──────────────────────────────────────
+echo.
+echo [AirSense] Launching Streamlit Dashboard...
+start "AirSense — Dashboard" cmd /k "scripts\run_dashboard.bat"
 
 echo.
 echo [AirSense] ========================================================
-echo [AirSense]  Phase 1 is running!
+echo [AirSense]  AirSense Full System is ONLINE!
 echo [AirSense]
-echo [AirSense]  Consumer window: check for "Stored:" lines
-echo [AirSense]  Verify DB with :
-echo [AirSense]    psql -U airsense -d airsense_db -c "SELECT city, COUNT(*) FROM aqi_readings GROUP BY city;"
-echo [AirSense]
-echo [AirSense]  Task Scheduler: add run_fetcher.bat to run every hour
+echo [AirSense]  - Kafka Stack: Running on port 9092
+echo [AirSense]  - Consumer: Ingesting streaming frames to TimescaleDB
+echo [AirSense]  - Ingestion: Live CPCB data fetched & ML forecasted
+echo [AirSense]  - Power BI: CSV datasets refreshed
+echo [AirSense]  - Dashboard: http://localhost:8501
 echo [AirSense] ========================================================
 echo.
 pause

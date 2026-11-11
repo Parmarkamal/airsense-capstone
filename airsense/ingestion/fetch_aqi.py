@@ -528,6 +528,16 @@ def run_fetch() -> int:
         publish_failed,
     )
 
+    if success > 0:
+        try:
+            from consumer.db import create_db_engine
+            from ml.training.predict_forecast import run_all_forecasts_and_save
+            db_engine = create_db_engine(settings)
+            run_all_forecasts_and_save(db_engine)
+            log.info("Auto-refreshed 48-hour ML forecasts with latest live telemetry.")
+        except Exception as fc_err:
+            log.warning("Could not auto-refresh forecasts: %s", fc_err)
+
     if success == 0:
         return 1
     return 0 if publish_failed == 0 else 2

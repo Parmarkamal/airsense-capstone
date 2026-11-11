@@ -35,21 +35,22 @@ def calculate_data_freshness(
 ) -> tuple[str, str, float]:
     """
     Classify observation age for dashboard freshness badges.
+    CPCB CAAQMS ground stations report on 1-2 hour publication cycles.
 
     Returns:
         (badge_color, label, age_in_hours)
-        - < 1 hour:  ("green", "🟢 Live (<1h old)", age)
-        - 1–3 hours: ("gold",  "🟡 Delayed (1-3h old)", age)
-        - > 3 hours: ("red",   "🔴 Stale (>3h old)", age)
+        - < 2.5 hours:  ("green", "🟢 Live (<2.5h old)", age)
+        - 2.5–6 hours: ("gold",  "🟡 Delayed (2.5-6h old)", age)
+        - > 6 hours:   ("red",   "🔴 Stale (>6h old)", age)
     """
     if reading_time is None or (isinstance(reading_time, float) and pd.isna(reading_time)):
-        return ("red", "🔴 Stale (>3h old)", float("inf"))
+        return ("red", "🔴 Stale (>6h old)", float("inf"))
 
     if isinstance(reading_time, str):
         try:
             reading_time = datetime.fromisoformat(reading_time.replace("Z", "+00:00"))
         except ValueError:
-            return ("red", "🔴 Stale (>3h old)", float("inf"))
+            return ("red", "🔴 Stale (>6h old)", float("inf"))
 
     if reading_time.tzinfo is None:
         reading_time = reading_time.replace(tzinfo=timezone.utc)
@@ -60,11 +61,11 @@ def calculate_data_freshness(
     if age_hours < 0:
         age_hours = 0.0
 
-    if age_hours < 1.0:
-        return ("green", "🟢 Live (<1h old)", age_hours)
-    if age_hours <= 3.0:
-        return ("gold", "🟡 Delayed (1-3h old)", age_hours)
-    return ("red", "🔴 Stale (>3h old)", age_hours)
+    if age_hours < 2.5:
+        return ("green", f"🟢 Live ({age_hours:.1f}h ago)", age_hours)
+    if age_hours <= 6.0:
+        return ("gold", f"🟡 Delayed ({age_hours:.1f}h ago)", age_hours)
+    return ("red", f"🔴 Stale ({age_hours:.1f}h ago)", age_hours)
 
 
 def get_provenance_badge(row: pd.Series | dict[str, Any]) -> dict[str, str]:
@@ -307,17 +308,35 @@ def get_pipeline_stats(engine: Engine) -> dict[str, Any]:
 
 
 def get_city_forecast(engine: Engine, city_slug: str) -> pd.DataFrame:
-    """Query the latest 48-hour forecast for a city from aqi_forecasts."""
+    """
+    Query the latest 48-hour forecast for a city from aqi_forecasts.
+    Filters out historical forecast records older than 1 hour.
+    If forecasts are missing or expired (< 12 future hours), auto-regenerates
+    them on-the-fly using the production LightGBM model so the dashboard
+    NEVER displays obsolete predictions, even after weeks of downtime.
+    """
     query = text("""
         SELECT forecast_time, predicted_aqi, model_version, generated_at
         FROM aqi_forecasts
-        WHERE city = :city_slug
+        WHERE city = :city_slug AND forecast_time >= NOW() - INTERVAL '1 hour'
         ORDER BY forecast_time ASC
         LIMIT 48;
     """)
     try:
         with engine.connect() as conn:
             df = pd.read_sql(query, conn, params={"city_slug": city_slug})
+
+        # Self-healing: auto-regenerate fresh 48h projections if table has expired
+        if len(df) < 12:
+            try:
+                from ml.training.predict_forecast import run_all_forecasts_and_save
+                logger.info("Forecast for %s has <12 future hours; auto-regenerating fresh 48h forecast...", city_slug)
+                run_all_forecasts_and_save(engine)
+                with engine.connect() as conn:
+                    df = pd.read_sql(query, conn, params={"city_slug": city_slug})
+            except Exception as auto_exc:
+                logger.warning("Auto-forecast regeneration fallback error: %s", auto_exc)
+
         return df
     except Exception as exc:
         logger.error("Failed to query forecast for %s: %s", city_slug, exc)

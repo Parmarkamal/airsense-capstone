@@ -83,15 +83,16 @@ def render_combined_forecast_chart(
         fc["forecast_time"] = pd.to_datetime(fc["forecast_time"])
         fc = fc.sort_values(by="forecast_time")
 
-        # Connect seamlessly from the last actual point if available
+        # Connect seamlessly from the last actual point if available and contiguous (<=6h gap)
+        conn_x = list(fc["forecast_time"])
+        conn_y = list(fc["predicted_aqi"])
         if not actual_df.empty:
             last_actual_time = act["time"].iloc[-1]
             last_actual_val = act["aqi"].iloc[-1]
-            conn_x = [last_actual_time] + list(fc["forecast_time"])
-            conn_y = [last_actual_val] + list(fc["predicted_aqi"])
-        else:
-            conn_x = list(fc["forecast_time"])
-            conn_y = list(fc["predicted_aqi"])
+            time_gap = (fc["forecast_time"].iloc[0] - last_actual_time).total_seconds() / 3600.0
+            if abs(time_gap) <= 6.0:
+                conn_x = [last_actual_time] + conn_x
+                conn_y = [last_actual_val] + conn_y
 
         # Phase 7: Expanding Forecast Confidence Cone — σ_h = σ_1 × √h
         # Uncertainty grows with forecast horizon, producing the characteristic
