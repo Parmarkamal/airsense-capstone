@@ -12,9 +12,12 @@ Renders:
 
 from __future__ import annotations
 
+from datetime import datetime, timedelta, timezone
 from typing import Any
 import pandas as pd
 import plotly.graph_objects as go
+
+IST = timezone(timedelta(hours=5, minutes=30))
 
 
 # CPCB NAAQS AQI Classification Bands & Palette
@@ -209,7 +212,7 @@ def render_pollutants_bar(row: pd.Series) -> go.Figure:
 
 
 def render_history_trend(history_df: pd.DataFrame, city_name: str) -> go.Figure:
-    """Plot an interactive 24-hour historical line chart with area fill."""
+    """Plot an interactive 24-hour historical line chart with area fill in Indian Standard Time (IST)."""
     if history_df.empty or "time" not in history_df.columns:
         fig = go.Figure()
         fig.add_annotation(
@@ -227,21 +230,26 @@ def render_history_trend(history_df: pd.DataFrame, city_name: str) -> go.Figure:
     latest_time = df["time"].iloc[-1]
     df = df[df["time"] >= (latest_time - pd.Timedelta(hours=28))].reset_index(drop=True)
 
+    # Convert timestamps to Indian Standard Time (IST, UTC+5:30) for local display
+    df["time_ist"] = df["time"].apply(
+        lambda t: t.astimezone(IST) if pd.notna(t) and getattr(t, "tzinfo", None) is not None else (t + pd.Timedelta(hours=5, minutes=30))
+    )
+
     fig = go.Figure()
 
-    # AQI Line
+    # CPCB AQI Line
     fig.add_trace(
         go.Scatter(
-            x=df["time"],
+            x=df["time_ist"],
             y=df["aqi"],
             mode="lines+markers",
-            name="AQI",
+            name="CPCB NAQI",
             line=dict(color="#3B82F6", width=2.5, shape="spline"),
             marker=dict(size=6, color="#1D4ED8", symbol="circle"),
             fill="tozeroy",
             fillcolor="rgba(59, 130, 246, 0.08)",
             connectgaps=False,
-            hovertemplate="<b>%{x|%b %d, %H:%M}</b><br>AQI: <b>%{y:.1f}</b><extra></extra>",
+            hovertemplate="<b>%{x|%b %d, %I:%M %p} IST</b><br>CPCB NAQI: <b>%{y:.0f}</b><extra></extra>",
         )
     )
 
@@ -249,7 +257,7 @@ def render_history_trend(history_df: pd.DataFrame, city_name: str) -> go.Figure:
     if "pm25" in df.columns and df["pm25"].notna().any():
         fig.add_trace(
             go.Scatter(
-                x=df["time"],
+                x=df["time_ist"],
                 y=df["pm25"],
                 mode="lines",
                 name="PM2.5 (µg/m³)",
@@ -266,7 +274,7 @@ def render_history_trend(history_df: pd.DataFrame, city_name: str) -> go.Figure:
 
     fig.update_layout(
         title=dict(
-            text=f"<b>24-Hour Air Quality Profile — {city_name}</b>",
+            text=f"<b>24-Hour Air Quality Profile (IST) — {city_name}</b>",
             font=dict(size=14, color="#1E293B"),
         ),
         height=270,
@@ -275,8 +283,13 @@ def render_history_trend(history_df: pd.DataFrame, city_name: str) -> go.Figure:
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(248, 250, 252, 0.6)",
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-        xaxis=dict(title="", showgrid=True, gridcolor="#E2E8F0"),
-        yaxis=dict(title="Index Value", showgrid=True, gridcolor="#E2E8F0", zeroline=False),
+        xaxis=dict(
+            title=dict(text="Time (Indian Standard Time — IST)", font=dict(size=11, color="#64748B")),
+            showgrid=True,
+            gridcolor="#E2E8F0",
+            tickformat="%I:%M %p",
+        ),
+        yaxis=dict(title="Index Value (CPCB NAQI)", showgrid=True, gridcolor="#E2E8F0", zeroline=False),
         font={"family": "Inter, system-ui, sans-serif"},
     )
     return fig

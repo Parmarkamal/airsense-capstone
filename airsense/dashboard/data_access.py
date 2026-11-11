@@ -13,7 +13,9 @@ Handles all database reads from TimescaleDB for the Streamlit dashboard:
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
+
+IST = timezone(timedelta(hours=5, minutes=30))
 from typing import Any
 
 import pandas as pd
@@ -61,11 +63,14 @@ def calculate_data_freshness(
     if age_hours < 0:
         age_hours = 0.0
 
+    # Display local Indian Standard Time (IST, UTC+5:30) for clear human recognition
+    ist_time_str = reading_time.astimezone(IST).strftime("%I:%M %p IST")
+
     if age_hours < 2.5:
-        return ("green", f"🟢 Live ({age_hours:.1f}h ago)", age_hours)
+        return ("green", f"🟢 Live ({ist_time_str} · {age_hours:.1f}h ago)", age_hours)
     if age_hours <= 6.0:
-        return ("gold", f"🟡 Delayed ({age_hours:.1f}h ago)", age_hours)
-    return ("red", f"🔴 Stale ({age_hours:.1f}h ago)", age_hours)
+        return ("gold", f"🟡 Delayed ({ist_time_str} · {age_hours:.1f}h ago)", age_hours)
+    return ("red", f"🔴 Stale ({ist_time_str} · {age_hours:.1f}h ago)", age_hours)
 
 
 def get_provenance_badge(row: pd.Series | dict[str, Any]) -> dict[str, str]:
@@ -258,27 +263,36 @@ def get_city_history(engine: Engine, city_slug: str, limit: int = 48) -> pd.Data
     Restricts results strictly to the contiguous recent period (last 28 hours
     relative to the latest reading) so old historical clusters from weeks ago
     are never joined across multi-day voids.
+    Deduplicates identical hourly timestamps via DISTINCT ON (r.time).
+    Populates 'aqi' with official CPCB NAQI (COALESCE(cpcb_aqi, aqi)) for 100%
+    metric consistency across cards, gauges, charts, and forecasts.
     """
     query = text("""
         WITH latest AS (
             SELECT MAX(time) AS max_time
             FROM aqi_readings
             WHERE city = :city_slug
+        ),
+        deduped AS (
+            SELECT DISTINCT ON (r.time)
+                r.time,
+                COALESCE(r.cpcb_aqi, r.aqi) AS aqi,
+                r.cpcb_aqi,
+                r.pm25,
+                r.pm10,
+                r.no2,
+                r.co,
+                r.so2,
+                r.o3,
+                r.prominent_pollutant,
+                r.data_source
+            FROM aqi_readings r, latest
+            WHERE r.city = :city_slug
+              AND latest.max_time IS NOT NULL
+              AND r.time >= latest.max_time - INTERVAL '28 hours'
+            ORDER BY r.time ASC, r.fetched_at DESC
         )
-        SELECT
-            r.time,
-            r.aqi,
-            r.pm25,
-            r.pm10,
-            r.no2,
-            r.co,
-            r.so2,
-            r.o3
-        FROM aqi_readings r, latest
-        WHERE r.city = :city_slug
-          AND latest.max_time IS NOT NULL
-          AND r.time >= latest.max_time - INTERVAL '28 hours'
-        ORDER BY r.time ASC;
+        SELECT * FROM deduped ORDER BY time ASC;
     """)
     try:
         with engine.connect() as conn:

@@ -618,7 +618,7 @@ def main():
         forecast_df = get_city_forecast(engine, target_slug)
 
         if not forecast_df.empty:
-            current_aqi = actual_df["aqi"].iloc[0] if not actual_df.empty else forecast_df["predicted_aqi"].iloc[0]
+            current_aqi = actual_df["aqi"].iloc[-1] if not actual_df.empty else forecast_df["predicted_aqi"].iloc[0]
             peak_val = forecast_df["predicted_aqi"].max()
             min_val = forecast_df["predicted_aqi"].min()
             delta_val = forecast_df["predicted_aqi"].iloc[-1] - current_aqi

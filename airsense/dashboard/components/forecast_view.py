@@ -15,10 +15,13 @@ Renders:
 from __future__ import annotations
 
 import json
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
+
+IST = timezone(timedelta(hours=5, minutes=30))
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
@@ -60,6 +63,7 @@ def render_combined_forecast_chart(
         return fig
 
     # 1. Historical Actual Trace (Solid Line)
+    last_actual_time_ist = None
     if not actual_df.empty:
         act = actual_df.copy()
         act["time"] = pd.to_datetime(act["time"])
@@ -68,16 +72,23 @@ def render_combined_forecast_chart(
         # Focus strictly on recent contiguous readings (last 28 hours) to prevent cross-day gaps
         act = act[act["time"] >= (latest_act_time - pd.Timedelta(hours=28))].reset_index(drop=True)
 
+        # Convert to Indian Standard Time (IST) for local Indian viewing
+        act["time_ist"] = act["time"].apply(
+            lambda t: t.astimezone(IST) if pd.notna(t) and getattr(t, "tzinfo", None) is not None else (t + pd.Timedelta(hours=5, minutes=30))
+        )
+        if not act.empty:
+            last_actual_time_ist = act["time_ist"].iloc[-1]
+
         fig.add_trace(
             go.Scatter(
-                x=act["time"],
+                x=act["time_ist"],
                 y=act["aqi"],
                 mode="lines+markers",
                 name="Actual AQI (Historical)",
                 line=dict(color="#2563EB", width=3),
                 marker=dict(size=6, color="#1D4ED8"),
                 connectgaps=False,
-                hovertemplate="<b>Actual</b>: %{y:.1f} AQI<br>%{x|%b %d, %H:%M}<extra></extra>",
+                hovertemplate="<b>Actual</b>: %{y:.0f} AQI<br>%{x|%b %d, %I:%M %p} IST<extra></extra>",
             )
         )
 
@@ -86,21 +97,21 @@ def render_combined_forecast_chart(
         fc = forecast_df.copy()
         fc["forecast_time"] = pd.to_datetime(fc["forecast_time"])
         fc = fc.sort_values(by="forecast_time")
+        fc["forecast_time_ist"] = fc["forecast_time"].apply(
+            lambda t: t.astimezone(IST) if pd.notna(t) and getattr(t, "tzinfo", None) is not None else (t + pd.Timedelta(hours=5, minutes=30))
+        )
 
         # Connect seamlessly from the last actual point if available and contiguous (<=6h gap)
-        conn_x = list(fc["forecast_time"])
+        conn_x = list(fc["forecast_time_ist"])
         conn_y = list(fc["predicted_aqi"])
         if not actual_df.empty and not act.empty:
-            last_actual_time = act["time"].iloc[-1]
             last_actual_val = act["aqi"].iloc[-1]
-            time_gap = (fc["forecast_time"].iloc[0] - last_actual_time).total_seconds() / 3600.0
-            if abs(time_gap) <= 6.0:
-                conn_x = [last_actual_time] + conn_x
+            time_gap = (fc["forecast_time"].iloc[0] - latest_act_time).total_seconds() / 3600.0
+            if abs(time_gap) <= 6.0 and last_actual_time_ist is not None:
+                conn_x = [last_actual_time_ist] + conn_x
                 conn_y = [last_actual_val] + conn_y
 
         # Phase 7: Expanding Forecast Confidence Cone — σ_h = σ_1 × √h
-        # Uncertainty grows with forecast horizon, producing the characteristic
-        # "cone" shape. σ_1 is the model's RMSE (1-step-ahead error).
         meta = load_model_metadata()
         sigma_1 = float(meta.get("rmse", 8.0))
         n_conn = len(conn_y)
@@ -177,7 +188,7 @@ def render_combined_forecast_chart(
                 name="Predicted AQI (LightGBM)",
                 line=dict(color="#EA580C", width=3, dash="dash"),
                 marker=dict(size=5, color="#C2410C", symbol="diamond"),
-                hovertemplate="<b>Forecast</b>: %{y:.1f} AQI<br>%{x|%b %d, %H:%M}<extra></extra>",
+                hovertemplate="<b>Forecast</b>: %{y:.0f} AQI<br>%{x|%b %d, %I:%M %p} IST<extra></extra>",
             )
         )
 
@@ -186,9 +197,30 @@ def render_combined_forecast_chart(
     fig.add_hline(y=100, line_dash="dot", line_color="#F59E0B", annotation_text="Moderate (100)")
     fig.add_hline(y=200, line_dash="dot", line_color="#EF4444", annotation_text="Poor (200)")
 
+    if last_actual_time_ist is not None:
+        fig.add_shape(
+            type="line",
+            x0=last_actual_time_ist,
+            x1=last_actual_time_ist,
+            y0=0,
+            y1=1,
+            yref="paper",
+            line=dict(color="#64748B", width=1.5, dash="dash"),
+        )
+        fig.add_annotation(
+            x=last_actual_time_ist,
+            y=1.02,
+            yref="paper",
+            text=f"<b>Current ({last_actual_time_ist.strftime('%I:%M %p')} IST)</b>",
+            showarrow=False,
+            xanchor="right",
+            yanchor="bottom",
+            font=dict(size=11, color="#64748B"),
+        )
+
     fig.update_layout(
         title=dict(
-            text=f"<b>48-Hour AQI Trajectory & Machine Learning Forecast — {city_name}</b>",
+            text=f"<b>48-Hour AQI Trajectory & Machine Learning Forecast (IST) — {city_name}</b>",
             font=dict(size=16, color="#1E293B"),
             x=0,
             y=0.96,
@@ -199,7 +231,12 @@ def render_combined_forecast_chart(
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(248, 250, 252, 0.6)",
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-        xaxis=dict(title="", showgrid=True, gridcolor="#E2E8F0"),
+        xaxis=dict(
+            title=dict(text="Timeline (Indian Standard Time — IST)", font=dict(size=12, color="#64748B")),
+            showgrid=True,
+            gridcolor="#E2E8F0",
+            tickformat="%b %d, %I:%M %p",
+        ),
         yaxis=dict(title="Air Quality Index (AQI)", showgrid=True, gridcolor="#E2E8F0"),
         font={"family": "Inter, system-ui, sans-serif"},
     )

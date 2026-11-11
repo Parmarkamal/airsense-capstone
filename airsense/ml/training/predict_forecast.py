@@ -198,7 +198,7 @@ def run_all_forecasts_and_save(engine: Engine) -> int:
     for city in cities:
         # Load historical buffer from TimescaleDB
         query = text("""
-            SELECT time, city, aqi, pm25, pm10, no2
+            SELECT time, city, COALESCE(cpcb_aqi, aqi) AS aqi, pm25, pm10, no2
             FROM aqi_readings
             WHERE city = :city
             ORDER BY time DESC

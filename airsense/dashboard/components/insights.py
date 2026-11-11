@@ -12,11 +12,14 @@ Features:
 
 from __future__ import annotations
 
+from datetime import datetime, timedelta, timezone
 import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from dashboard.components.gauges import get_aqi_category
+
+IST = timezone(timedelta(hours=5, minutes=30))
 
 
 def render_city_ranking_chart(df_latest: pd.DataFrame) -> go.Figure:
@@ -171,7 +174,11 @@ def render_diurnal_pattern_chart(history_df: pd.DataFrame) -> go.Figure:
         return fig
 
     df_copy = history_df.copy()
-    df_copy["hour"] = pd.to_datetime(df_copy["time"]).dt.hour
+    # Convert timestamps to Indian Standard Time (IST) before aggregating by hour
+    df_copy["time_ist"] = pd.to_datetime(df_copy["time"]).apply(
+        lambda t: t.astimezone(IST) if pd.notna(t) and getattr(t, "tzinfo", None) is not None else (t + pd.Timedelta(hours=5, minutes=30))
+    )
+    df_copy["hour"] = df_copy["time_ist"].dt.hour
 
     hourly = df_copy.groupby("hour")["aqi"].agg(["mean", "min", "max"]).reset_index()
 
@@ -200,19 +207,19 @@ def render_diurnal_pattern_chart(history_df: pd.DataFrame) -> go.Figure:
             name="Hourly Mean AQI",
             line=dict(color="#2563EB", width=3, shape="spline"),
             marker=dict(size=8, color="#1E40AF"),
-            hovertemplate="Hour %{x}:00<br>Average AQI: <b>%{y:.1f}</b><extra></extra>",
+            hovertemplate="Hour %{x}:00 IST<br>Average AQI: <b>%{y:.1f}</b><extra></extra>",
         )
     )
 
     fig.update_layout(
         title=dict(
-            text="<b>Diurnal (24-Hour) Pollution Rhythm</b>",
+            text="<b>Diurnal (24-Hour) Pollution Rhythm (IST)</b>",
             font=dict(size=15, color="#1E293B"),
             x=0,
             y=0.96,
         ),
         xaxis=dict(
-            title="Hour of the Day (00:00 - 23:00)",
+            title="Hour of the Day (IST: 00:00 - 23:00)",
             tickmode="linear",
             tick0=0,
             dtick=2,
