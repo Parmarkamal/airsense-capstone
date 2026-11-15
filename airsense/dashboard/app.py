@@ -42,6 +42,7 @@ except ImportError:
     st_autorefresh = None
 
 from common.config import load_settings
+from common.cpcb_calculator import calculate_cpcb_naqi, convert_co_ug_to_mg, get_cpcb_category
 from consumer.db import create_db_engine
 from dashboard.data_access import (
     get_latest_readings_all_cities,
@@ -393,10 +394,109 @@ def main():
             """, unsafe_allow_html=True)
 
         with c_right:
-            st.markdown("<h5 style='margin-bottom:2px;'>🔬 Granular Pollutant Concentrations</h5>", unsafe_allow_html=True)
-            bar_fig = render_pollutants_bar(city_data)
-            st.plotly_chart(bar_fig, use_container_width=True, config={"displayModeBar": False})
-            st.caption(f"📍 **Telemetry Provenance:** {prov_info['badge']} — {prov_info['tooltip']}. Calculation: {city_data.get('calculation_method', 'CPCB NAQI 2014')}.")
+            st.markdown("<h5 style='margin-bottom:2px;'>🎛️ Municipal Policy Simulator (Prescriptive BI)</h5>", unsafe_allow_html=True)
+            st.caption("Simulate municipal interventions in real-time. Recalculates CPCB NAQI dynamically across combustion vs. dust sources.")
+
+            # Prescriptive Sliders: Decoupled Traffic/Industry from Road Dust/Construction
+            s_c1, s_c2 = st.columns(2)
+            with s_c1:
+                veh_curb = st.slider(
+                    "🚗 Traffic & Industry Curb %",
+                    min_value=0,
+                    max_value=50,
+                    value=0,
+                    step=5,
+                    help="Mitigates vehicular combustion & industrial stacks (curbs PM2.5, NO2, CO, SO2)",
+                    key=f"veh_slider_{selected_slug}",
+                )
+            with s_c2:
+                dust_curb = st.slider(
+                    "🏗️ Dust & Construction Curb %",
+                    min_value=0,
+                    max_value=50,
+                    value=0,
+                    step=5,
+                    help="Mitigates mechanical road dust & construction activity (curbs PM10)",
+                    key=f"dust_slider_{selected_slug}",
+                )
+
+            # Extract baseline pollutant concentrations
+            p_pm25 = float(city_data["pm25"]) if pd.notna(city_data.get("pm25")) else 0.0
+            p_pm10 = float(city_data["pm10"]) if pd.notna(city_data.get("pm10")) else 0.0
+            p_no2 = float(city_data["no2"]) if pd.notna(city_data.get("no2")) else 0.0
+            p_so2 = float(city_data["so2"]) if pd.notna(city_data.get("so2")) else 0.0
+            p_co = float(city_data["co"]) if pd.notna(city_data.get("co")) else 0.0
+            p_o3 = float(city_data["o3"]) if pd.notna(city_data.get("o3")) else 0.0
+
+            if p_co > 50.0:
+                p_co = convert_co_ug_to_mg(p_co) or (p_co / 1000.0)
+
+            # Base CPCB metrics
+            base_aqi_num = int(round(city_data["cpcb_aqi"])) if pd.notna(city_data.get("cpcb_aqi")) else int(round(city_data["aqi"]))
+            base_cat_obj = get_aqi_category(base_aqi_num)
+            base_prom = city_data.get("prominent_pollutant") or "PM2.5"
+
+            # Apply decoupled reduction multipliers
+            veh_mult = 1.0 - (veh_curb / 100.0)
+            dust_mult = 1.0 - (dust_curb / 100.0)
+
+            sim_dict = {
+                "pm25": p_pm25 * veh_mult if p_pm25 > 0 else None,
+                "pm10": p_pm10 * dust_mult if p_pm10 > 0 else None,
+                "no2": p_no2 * veh_mult if p_no2 > 0 else None,
+                "so2": p_so2 * veh_mult if p_so2 > 0 else None,
+                "co": p_co * veh_mult if p_co > 0 else None,
+                "o3": p_o3 if p_o3 > 0 else None,
+            }
+
+            sim_eval = calculate_cpcb_naqi(sim_dict, is_indicative=True)
+            sim_aqi_num = int(round(sim_eval["aqi"])) if sim_eval.get("aqi") is not None else base_aqi_num
+            sim_cat_obj = get_aqi_category(sim_aqi_num)
+            sim_prom = sim_eval.get("prominent_pollutant") or base_prom
+            pts_saved = max(0, base_aqi_num - sim_aqi_num)
+
+            # Comparison Metrics Strip
+            m_c1, m_c2, m_c3 = st.columns(3)
+            with m_c1:
+                st.metric("Baseline AQI", f"{base_aqi_num}", help=f"{base_cat_obj['label']} · Prominent: {base_prom}")
+            with m_c2:
+                st.metric(
+                    "Simulated AQI",
+                    f"{sim_aqi_num}",
+                    delta=f"-{pts_saved} pts" if pts_saved > 0 else "0 pts",
+                    delta_color="normal" if pts_saved > 0 else "off",
+                    help=f"{sim_cat_obj['label']} · Prominent: {sim_prom}",
+                )
+            with m_c3:
+                st.metric(
+                    "Projected Category",
+                    f"{sim_cat_obj['label']}",
+                    delta=f"Key: {sim_prom}",
+                    delta_color="off",
+                )
+
+            # Prescriptive Action Analysis Callout
+            if veh_curb > 0 and dust_curb == 0 and pts_saved <= 2:
+                st.markdown(f"""
+                <div style="background:#451A03; border-left:4px solid #F59E0B; padding:8px 12px; border-radius:6px; font-size:11.5px; color:#FDE68A; margin-top:6px; line-height:1.4;">
+                    ⚠️ <b>Environmental Bottleneck:</b> Traffic curb successfully drops combustion pollutants, but overall AQI remains 
+                    bottlenecked at <b>{sim_aqi_num}</b> because <b>{sim_prom}</b> (road/construction dust) is now dominant. 
+                    Increase <i>Dust & Construction Curb</i> to break the threshold.
+                </div>
+                """, unsafe_allow_html=True)
+            elif pts_saved > 0:
+                st.markdown(f"""
+                <div style="background:#064E3B; border-left:4px solid #10B981; padding:8px 12px; border-radius:6px; font-size:11.5px; color:#D1FAE5; margin-top:6px; line-height:1.4;">
+                    🎉 <b>Prescriptive Policy Impact:</b> Interventions lower urban exposure by <b>{pts_saved} AQI points</b> 
+                    ({base_cat_obj['label']} ➔ {sim_cat_obj['label']}). Primary determinant shifted to <b>{sim_prom}</b>.
+                </div>
+                """, unsafe_allow_html=True)
+            else:
+                st.markdown("""
+                <div style="background:#1E293B; border-left:4px solid #64748B; padding:8px 12px; border-radius:6px; font-size:11.5px; color:#CBD5E1; margin-top:6px; line-height:1.4;">
+                    💡 <b>Scenario Engine Ready:</b> Adjust sliders above to evaluate odd-even vehicle limits, heavy transport bans, or mist-cannon dust suppression on urban air quality.
+                </div>
+                """, unsafe_allow_html=True)
 
         # 24-Hour Trend Visualizer
         st.markdown("<hr style='margin:10px 0;'>", unsafe_allow_html=True)
@@ -405,7 +505,26 @@ def main():
         trend_fig = render_history_trend(history_df, selected_display)
         st.plotly_chart(trend_fig, use_container_width=True, config={"displayModeBar": False})
 
-        with st.expander(f"🔍 View Raw Telemetry Records for {selected_display}"):
+        # Progressive Disclosure: Deep-dive telemetry and provenance in an expander drawer
+        with st.expander(f"🔬 Deep-Dive: Granular Pollutants, Sensor Provenance & Raw Records ({selected_display})", expanded=False):
+            exp_c1, exp_c2 = st.columns([1, 1])
+            with exp_c1:
+                st.markdown("<h6 style='margin-bottom:2px;'>🔬 Granular Pollutant Concentrations</h6>", unsafe_allow_html=True)
+                bar_fig = render_pollutants_bar(city_data)
+                st.plotly_chart(bar_fig, use_container_width=True, config={"displayModeBar": False})
+            with exp_c2:
+                st.markdown("<h6 style='margin-bottom:2px;'>📍 Telemetry Provenance & Quality Audit</h6>", unsafe_allow_html=True)
+                st.markdown(f"""
+                <div style="background:#0F172A; border:1px solid #334155; border-radius:8px; padding:12px; font-size:12px; color:#F8FAFC; line-height:1.6;">
+                    <div><b>Provenance:</b> {prov_info['badge']}</div>
+                    <div><b>Verification:</b> {prov_info['tooltip']}</div>
+                    <div><b>Statutory Standard:</b> {city_data.get('calculation_method', 'CPCB NAQI 2014')}</div>
+                    <div><b>Operator:</b> {city_data.get('station_operator', 'CPCB / SPCB Ground Station')}</div>
+                </div>
+                """, unsafe_allow_html=True)
+
+            st.markdown("<hr style='margin:8px 0;'>", unsafe_allow_html=True)
+            st.markdown(f"<h6 style='margin-bottom:2px;'>📋 Recent Observation Records ({selected_display})</h6>", unsafe_allow_html=True)
             if not history_df.empty:
                 st.dataframe(
                     history_df.style.format({
@@ -678,70 +797,71 @@ def main():
             fig = render_combined_forecast_chart(actual_df, forecast_df, selected_city_name)
             st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
-            # Phase 7: Benchmark Comparison — LightGBM vs Naive Baselines
-            st.markdown("---")
-            st.markdown("#### 📊 Model Benchmark — LightGBM vs Naive Baselines")
-            st.markdown(
-                "The LightGBM champion model is benchmarked against two naive forecasting "
-                "baselines. A defensible ML model must demonstrably outperform these trivial "
-                "predictors to justify its deployment complexity."
-            )
-            bench_chart = render_benchmark_comparison_chart()
-            st.plotly_chart(bench_chart, use_container_width=True, config={"displayModeBar": False})
+            # Progressive Disclosure: Deep-dive MLOps Governance, SHAP & Baselines in collapsible expander
+            with st.expander("🔍 Deep-Dive: Model Governance, TreeSHAP Explainability & Benchmark Baselines", expanded=False):
+                # Phase 7: Benchmark Comparison — LightGBM vs Naive Baselines
+                st.markdown("#### 📊 Model Benchmark — LightGBM vs Naive Baselines")
+                st.markdown(
+                    "The LightGBM champion model is benchmarked against two naive forecasting "
+                    "baselines. A defensible ML model must demonstrably outperform these trivial "
+                    "predictors to justify its deployment complexity."
+                )
+                bench_chart = render_benchmark_comparison_chart()
+                st.plotly_chart(bench_chart, use_container_width=True, config={"displayModeBar": False})
 
-            # Benchmark comparison table
-            bench_data = get_benchmark_comparison_data()
-            st.dataframe(
-                pd.DataFrame(bench_data),
-                use_container_width=True,
-                hide_index=True,
-                column_config={
-                    "Model": st.column_config.TextColumn("Model", width="medium"),
-                    "RMSE": st.column_config.NumberColumn("RMSE", format="%.2f"),
-                    "MAE": st.column_config.NumberColumn("MAE", format="%.2f"),
-                    "R²": st.column_config.NumberColumn("R²", format="%.3f"),
-                },
-            )
+                # Benchmark comparison table
+                bench_data = get_benchmark_comparison_data()
+                st.dataframe(
+                    pd.DataFrame(bench_data),
+                    use_container_width=True,
+                    hide_index=True,
+                    column_config={
+                        "Model": st.column_config.TextColumn("Model", width="medium"),
+                        "RMSE": st.column_config.NumberColumn("RMSE", format="%.2f"),
+                        "MAE": st.column_config.NumberColumn("MAE", format="%.2f"),
+                        "R²": st.column_config.NumberColumn("R²", format="%.3f"),
+                    },
+                )
 
-            # Phase 7: SHAP Feature Importance & Explainability
-            st.markdown("---")
-            st.markdown("#### 🔬 SHAP Feature Importance — Explainability")
-            st.markdown(
-                "SHAP (SHapley Additive exPlanations) values quantify each feature's "
-                "contribution to individual predictions. The chart below shows the top 5 "
-                "predictive drivers by mean absolute SHAP value, computed via LightGBM's "
-                "built-in TreeSHAP algorithm."
-            )
-            shap_fig = render_feature_importance_chart()
-            st.plotly_chart(shap_fig, use_container_width=True, config={"displayModeBar": False})
+                # Phase 7: SHAP Feature Importance & Explainability
+                st.markdown("---")
+                st.markdown("#### 🔬 SHAP Feature Importance — Explainability")
+                st.markdown(
+                    "SHAP (SHapley Additive exPlanations) values quantify each feature's "
+                    "contribution to individual predictions. The chart below shows the top 5 "
+                    "predictive drivers by mean absolute SHAP value, computed via LightGBM's "
+                    "built-in TreeSHAP algorithm."
+                )
+                shap_fig = render_feature_importance_chart()
+                st.plotly_chart(shap_fig, use_container_width=True, config={"displayModeBar": False})
 
-            # ── Enterprise MLOps Model Governance & Live Covariate Drift Monitor ───
-            st.markdown("---")
-            st.markdown("#### 🛡️ Enterprise MLOps Model Governance & Live Covariate Drift Monitor")
-            st.markdown(
-                "Continuous monitoring of champion model performance against live streaming telemetry. "
-                "Evaluates input feature distribution shifts (Covariate Shift) and model confidence "
-                "to ensure operational integrity in compliance with production AI governance frameworks."
-            )
-            drift_info = get_model_governance_and_drift(actual_df, selected_city_name)
-            gov_c1, gov_c2, gov_c3, gov_c4 = st.columns(4)
-            with gov_c1:
-                st.metric("Model Architecture", "LightGBM Champion v1.0", help="Gradient boosted tree ensemble with walk-forward CV")
-            with gov_c2:
-                st.metric("Covariate Drift Status", drift_info["drift_status"], help="Statistical comparison of 24h streaming features vs training baseline")
-            with gov_c3:
-                st.metric("Population Stability Index (PSI)", f"{drift_info['psi_estimate']:.3f}", help="PSI < 0.10 indicates no significant feature distribution shift")
-            with gov_c4:
-                st.metric("Retraining Recommendation", "Active / Certified", help="Trigger retraining if PSI exceeds 0.25")
+                # ── Enterprise MLOps Model Governance & Live Covariate Drift Monitor ───
+                st.markdown("---")
+                st.markdown("#### 🛡️ Enterprise MLOps Model Governance & Live Covariate Drift Monitor")
+                st.markdown(
+                    "Continuous monitoring of champion model performance against live streaming telemetry. "
+                    "Evaluates input feature distribution shifts (Covariate Shift) and model confidence "
+                    "to ensure operational integrity in compliance with production AI governance frameworks."
+                )
+                drift_info = get_model_governance_and_drift(actual_df, selected_city_name)
+                gov_c1, gov_c2, gov_c3, gov_c4 = st.columns(4)
+                with gov_c1:
+                    st.metric("Model Architecture", "LightGBM Champion v1.0", help="Gradient boosted tree ensemble with walk-forward CV")
+                with gov_c2:
+                    st.metric("Covariate Drift Status", drift_info["drift_status"], help="Statistical comparison of 24h streaming features vs training baseline")
+                with gov_c3:
+                    st.metric("Population Stability Index (PSI)", f"{drift_info['psi_estimate']:.3f}", help="PSI < 0.10 indicates no significant feature distribution shift")
+                with gov_c4:
+                    st.metric("Retraining Recommendation", "Active / Certified", help="Trigger retraining if PSI exceeds 0.25")
 
-            st.markdown(f"""
-            <div style="background:#1E293B; border:1px solid #334155; border-radius:8px; padding:12px 16px; margin-top:8px; font-size:12px; color:#F1F5F9;">
-                <b>📡 Feature Baseline vs Live Telemetry Verification ({selected_city_name}):</b><br>
-                • <b>PM2.5 Live Mean:</b> {drift_info['pm25_live_mean']} µg/m³ &nbsp;|&nbsp; <b>Training Baseline:</b> {drift_info['pm25_base_mean']} µg/m³ (Z-shift: {drift_info['pm25_z']}σ)<br>
-                • <b>NO2 Live Mean:</b> {drift_info['no2_live_mean']} µg/m³ &nbsp;|&nbsp; <b>Training Baseline:</b> {drift_info['no2_base_mean']} µg/m³ (Z-shift: {drift_info['no2_z']}σ)<br>
-                • <b>Operational Status:</b> Champion LightGBM weights remain statistically optimal. No model degradation or concept drift detected.
-            </div>
-            """, unsafe_allow_html=True)
+                st.markdown(f"""
+                <div style="background:#1E293B; border:1px solid #334155; border-radius:8px; padding:12px 16px; margin-top:8px; font-size:12px; color:#F1F5F9;">
+                    <b>📡 Feature Baseline vs Live Telemetry Verification ({selected_city_name}):</b><br>
+                    • <b>PM2.5 Live Mean:</b> {drift_info['pm25_live_mean']} µg/m³ &nbsp;|&nbsp; <b>Training Baseline:</b> {drift_info['pm25_base_mean']} µg/m³ (Z-shift: {drift_info['pm25_z']}σ)<br>
+                    • <b>NO2 Live Mean:</b> {drift_info['no2_live_mean']} µg/m³ &nbsp;|&nbsp; <b>Training Baseline:</b> {drift_info['no2_base_mean']} µg/m³ (Z-shift: {drift_info['no2_z']}σ)<br>
+                    • <b>Operational Status:</b> Champion LightGBM weights remain statistically optimal. No model degradation or concept drift detected.
+                </div>
+                """, unsafe_allow_html=True)
 
             # Data Expander Table
             with st.expander("📋 View Hourly Forecast Data Table & Health Advisory", expanded=False):
