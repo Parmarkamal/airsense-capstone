@@ -1,12 +1,15 @@
 """
-AirSense — Real-Time Air Quality & Environmental Intelligence Platform
+AirSense — Real-Time Urban AQI Forecasting & Grounded GenAI Health Advisory Platform
 File: dashboard/app.py
-Weeks: 3 & 4 Deliverables
+M.Sc. IT (Business Intelligence & Analytics) Capstone | Gujarat University
 
-Views (Sidebar Navigable):
-  1. 🏠 Live Telemetry: KPI Cards, CPCB Gauge, Pollutant Concentrations, 24h Trend
-  2. 🗺️ India Air Quality Map: Interactive Folium Geographic Bubble Map with CPCB Pins
-  3. 📊 EDA & Analytical Insights: Ranked League, PM2.5/PM10 Diagnostics, Diurnal Rhythm, Z-score Outliers
+Platform Architecture:
+  1. 🏠 Live Telemetry: 6 Urban Hub Cards, CPCB Gauge, 24h Trend & 2-Slider Policy Simulator (Prescriptive BI)
+  2. 🗺️ India Air Quality Map: Interactive Folium Geospatial Map with CPCB NAAQS Severity Pins
+  3. 📈 Business Intelligence: CPCB/WHO Compliance Matrix, Demographic Vulnerability & Star Schema
+  4. 🔮 48-Hour AQI Forecast: Champion LightGBM Regressor, TreeSHAP Explainability & MLOps Drift Monitor
+  5. 🤖 AI Health Advisor: 100% Offline RAG with Local Ollama (LLaMA 3.2 3B) & ChromaDB Vector Store
+  6. 🩺 Pipeline Health: Live Kafka Broker (Port 9092) & TimescaleDB (Port 5433) Streaming Observability
 """
 
 from __future__ import annotations
