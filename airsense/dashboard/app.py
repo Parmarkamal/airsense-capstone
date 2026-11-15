@@ -324,6 +324,33 @@ def get_engine():
     return create_db_engine(settings)
 
 
+@st.cache_data(ttl=600)
+def _fetch_open_meteo_current_weather(lat: float, lon: float) -> tuple[float, int, float, bool]:
+    """Fetch live surface weather from Open-Meteo with graceful model fallback."""
+    try:
+        import json as _json
+        import urllib.request as _urllib_req
+        url = (
+            f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}"
+            "&current=temperature_2m,relative_humidity_2m,wind_speed_10m"
+        )
+        req = _urllib_req.Request(url, headers={"User-Agent": "AirSense/1.0"})
+        with _urllib_req.urlopen(req, timeout=4.0) as resp:
+            data = _json.loads(resp.read().decode())
+            curr = data.get("current", {})
+            t = round(float(curr["temperature_2m"]), 1)
+            h = int(round(float(curr["relative_humidity_2m"])))
+            w = round(float(curr["wind_speed_10m"]), 1)
+            return t, h, w, False
+    except Exception:
+        pass
+    now_h = datetime.now(IST).hour
+    m_temp = round(23.0 + 8.5 * math.sin(max(0, now_h - 6) * math.pi / 14.0), 1)
+    m_hum = int(round(65.0 - 22.0 * math.sin(max(0, now_h - 6) * math.pi / 14.0)))
+    m_wind = round(10.0 + 4.5 * math.cos(now_h * math.pi / 12.0), 1)
+    return m_temp, m_hum, m_wind, True
+
+
 def main():
     try:
         engine = get_engine()
@@ -432,34 +459,6 @@ def main():
         CPCB NAAQS and WHO guidelines for educational and analytical purposes. This platform does not provide medical diagnoses.
     </div>
     """, unsafe_allow_html=True)
-
-# ── Fetch Live Data ────────────────────────────────────────────────────────
-@st.cache_data(ttl=600)
-def _fetch_open_meteo_current_weather(lat: float, lon: float) -> tuple[float, int, float, bool]:
-    """Fetch live surface weather from Open-Meteo with graceful model fallback."""
-    try:
-        import json as _json
-        import urllib.request as _urllib_req
-        url = (
-            f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}"
-            "&current=temperature_2m,relative_humidity_2m,wind_speed_10m"
-        )
-        req = _urllib_req.Request(url, headers={"User-Agent": "AirSense/1.0"})
-        with _urllib_req.urlopen(req, timeout=4.0) as resp:
-            data = _json.loads(resp.read().decode())
-            curr = data.get("current", {})
-            t = round(float(curr["temperature_2m"]), 1)
-            h = int(round(float(curr["relative_humidity_2m"])))
-            w = round(float(curr["wind_speed_10m"]), 1)
-            return t, h, w, False
-    except Exception:
-        pass
-    now_h = datetime.now(IST).hour
-    m_temp = round(23.0 + 8.5 * math.sin(max(0, now_h - 6) * math.pi / 14.0), 1)
-    m_hum = int(round(65.0 - 22.0 * math.sin(max(0, now_h - 6) * math.pi / 14.0)))
-    m_wind = round(10.0 + 4.5 * math.cos(now_h * math.pi / 12.0), 1)
-    return m_temp, m_hum, m_wind, True
-
 
     # ── Fetch Live Data ────────────────────────────────────────────────────────
     df_latest = get_latest_readings_all_cities(engine)
