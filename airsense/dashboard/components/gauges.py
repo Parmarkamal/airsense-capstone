@@ -106,13 +106,12 @@ def apply_dark_layout(fig: "go.Figure") -> "go.Figure":
 
     Sets transparent backgrounds, light font colours, subtle gridlines,
     and removes all legacy light-mode colour overrides from titles, axes,
-    annotations, and traces.  Call this at the end of every chart function.
+    annotations, and traces. Call this at the end of every chart function.
     """
     fig.update_layout(
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         font=dict(color="#E8ECF4", family="Inter, system-ui, sans-serif"),
-        title_font_color="#E8ECF4",
         xaxis=dict(
             gridcolor="rgba(255,255,255,0.06)",
             color="#E8ECF4",
@@ -130,6 +129,9 @@ def apply_dark_layout(fig: "go.Figure") -> "go.Figure":
             bgcolor="rgba(0,0,0,0)",
         ),
     )
+    # Only update title font color if title text actually exists (prevents Plotly "undefined" bug)
+    if fig.layout.title and getattr(fig.layout.title, "text", None):
+        fig.layout.title.font.color = "#E8ECF4"
     # Clear any dark text that was baked into traces
     fig.update_traces(textfont_color="#E8ECF4", selector=dict(type="bar"))
     # Update annotation font colours

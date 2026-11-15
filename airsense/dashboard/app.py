@@ -305,13 +305,16 @@ st.markdown("""
     }
 
     .anomaly-card {
-        background-color: rgba(255, 241, 242, 0.95);
+        background: rgba(15, 23, 42, 0.85);
         border-left: 4px solid #E11D48;
-        padding: 8px 12px;
-        border-radius: 6px;
+        border-top: 1px solid rgba(225, 29, 72, 0.25);
+        border-right: 1px solid rgba(225, 29, 72, 0.25);
+        border-bottom: 1px solid rgba(225, 29, 72, 0.25);
+        padding: 10px 14px;
+        border-radius: 8px;
         margin-bottom: 8px;
         font-size: 12px;
-        color: #881337;
+        color: #F8FAFC;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -655,7 +658,7 @@ def main():
                     max_value=50,
                     value=0,
                     step=5,
-                    help="Mitigates vehicular combustion & industrial stacks (curbs PM2.5, NO2, CO, SO2)",
+                    help="Mitigates vehicular combustion & industrial stacks (curbs PM2.5, NO2, CO, SO2, and photochemical Ozone precursors)",
                     key=f"veh_slider_{selected_slug}",
                 )
             with s_c2:
@@ -685,9 +688,10 @@ def main():
             base_cat_obj = get_aqi_category(base_aqi_num)
             base_prom = city_data.get("prominent_pollutant") or "PM2.5"
 
-            # Apply decoupled reduction multipliers
+            # Apply decoupled reduction multipliers (Ozone is secondary photochemical product of NOx & VOC precursors)
             veh_mult = 1.0 - (veh_curb / 100.0)
             dust_mult = 1.0 - (dust_curb / 100.0)
+            o3_mult = max(0.2, 1.0 - 0.85 * (veh_curb / 100.0))
 
             sim_dict = {
                 "pm25": p_pm25 * veh_mult if p_pm25 > 0 else None,
@@ -695,7 +699,7 @@ def main():
                 "no2": p_no2 * veh_mult if p_no2 > 0 else None,
                 "so2": p_so2 * veh_mult if p_so2 > 0 else None,
                 "co": p_co * veh_mult if p_co > 0 else None,
-                "o3": p_o3 if p_o3 > 0 else None,
+                "o3": p_o3 * o3_mult if p_o3 > 0 else None,
             }
 
             sim_eval = calculate_cpcb_naqi(sim_dict, is_indicative=True)
@@ -971,14 +975,14 @@ def main():
             cpcb_cat_sim = get_aqi_category(cpcb_sim)
 
             st.markdown(f"""
-            <div style="background:#F8FAFC; border:1px solid #CBD5E1; border-radius:8px; padding:12px; margin-top:8px;">
-                <div style="font-size:11px; font-weight:700; color:#64748B;">INDIAN CPCB NAQI (2014)</div>
-                <div style="font-size:24px; font-weight:800; color:{cpcb_cat_sim['color']};">{cpcb_sim} <span style="font-size:13px;">({cpcb_cat_sim['label']})</span></div>
-                <hr style="margin:8px 0; border:0; border-top:1px dashed #CBD5E1;">
-                <div style="font-size:11px; font-weight:700; color:#64748B;">US EPA AQI (2024 REVISION)</div>
-                <div style="font-size:24px; font-weight:800; color:{us_sim_color};">{us_sim} <span style="font-size:13px;">({us_sim_cat})</span></div>
-                <hr style="margin:8px 0; border:0; border-top:1px dashed #CBD5E1;">
-                <div style="font-size:11px; color:#475569;">WHO 2021 24h Threshold: <b>15 µg/m³</b> ({sim_pm25/15.0:.1f}x limit)</div>
+            <div style="background:rgba(15,23,42,0.85); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:14px; margin-top:8px;">
+                <div style="font-size:11px; font-weight:700; color:#94A3B8; letter-spacing:0.04em;">INDIAN CPCB NAQI (2014)</div>
+                <div style="font-size:24px; font-weight:800; color:{cpcb_cat_sim['color']};">{cpcb_sim} <span style="font-size:13px; color:#E2E8F0;">({cpcb_cat_sim['label']})</span></div>
+                <hr style="margin:8px 0; border:0; border-top:1px dashed rgba(255,255,255,0.1);">
+                <div style="font-size:11px; font-weight:700; color:#94A3B8; letter-spacing:0.04em;">US EPA AQI (2024 REVISION)</div>
+                <div style="font-size:24px; font-weight:800; color:{us_sim_color};">{us_sim} <span style="font-size:13px; color:#E2E8F0;">({us_sim_cat})</span></div>
+                <hr style="margin:8px 0; border:0; border-top:1px dashed rgba(255,255,255,0.1);">
+                <div style="font-size:11px; color:#94A3B8;">WHO 2021 24h Threshold: <b style="color:#F8FAFC;">15 µg/m³</b> ({sim_pm25/15.0:.1f}x limit)</div>
             </div>
             """, unsafe_allow_html=True)
 

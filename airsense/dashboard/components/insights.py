@@ -544,6 +544,7 @@ def render_standards_comparison_chart(pm25_val: float) -> go.Figure:
     values = [cpcb_aqi, us_aqi or 0]
     colors = [cpcb_cat["color"], us_color]
     cats = [cpcb_cat["label"], us_cat]
+    max_val = max(values) if values else 100
 
     fig = go.Figure(
         go.Bar(
@@ -551,10 +552,10 @@ def render_standards_comparison_chart(pm25_val: float) -> go.Figure:
             y=labels,
             orientation="h",
             marker=dict(color=colors, cornerradius=8),
-            text=[f"<b>{v}</b> ({c})" for v, c in zip(values, cats)],
-            textposition="inside",
-            insidetextanchor="middle",
-            textfont=dict(color="#FFFFFF", size=14, family="Inter, sans-serif"),
+            text=[f" <b>{v}</b> ({c})" for v, c in zip(values, cats)],
+            textposition="outside",
+            cliponaxis=False,
+            textfont=dict(color="#E8ECF4", size=13, family="Inter, sans-serif"),
             hovertemplate="<b>%{y}</b><br>AQI Score: <b>%{x}</b><br>Category: %{text}<extra></extra>",
         )
     )
@@ -566,8 +567,8 @@ def render_standards_comparison_chart(pm25_val: float) -> go.Figure:
             x=0,
         ),
         height=220,
-        margin=dict(l=10, r=20, t=40, b=20),
-        xaxis=dict(title="Index Value (Scale 0–500)", range=[0, 520], showgrid=True, gridcolor="rgba(255,255,255,0.06)"),
+        margin=dict(l=10, r=90, t=40, b=20),
+        xaxis=dict(title="Index Value (Scale 0–500)", range=[0, max(520, int(max_val * 1.35))], showgrid=True, gridcolor="rgba(255,255,255,0.06)"),
         yaxis=dict(title="", automargin=True),
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",

@@ -22,16 +22,30 @@ def create_india_air_map(df_latest: pd.DataFrame) -> folium.Map:
     """
     Generate an interactive Folium map centered on India with color-coded
     air quality bubbles for all monitored urban centers.
-    Uses CartoDB dark_matter tiles for sleek dark aesthetics.
+    Uses 100% free OpenStreetMap tiles with an embedded dark filter (NO API keys required).
     """
     # Center geographically over India with appropriate initial zoom
     india_center = [21.5, 78.5]
     m = folium.Map(
         location=india_center,
         zoom_start=5,
-        tiles="CartoDB dark_matter",
+        tiles="OpenStreetMap",
         control_scale=True,
     )
+
+    # Inject dark mode CSS for tiles: transforms standard tiles to sleek dark matter aesthetic
+    # without requiring external third-party API keys or showing watermark errors
+    dark_tile_filter = """
+    <style>
+    .leaflet-tile-pane {
+        filter: invert(93%) hue-rotate(190deg) brightness(82%) contrast(95%) !important;
+    }
+    .leaflet-container {
+        background: #0B0F19 !important;
+    }
+    </style>
+    """
+    m.get_root().header.add_child(folium.Element(dark_tile_filter))
 
     if df_latest.empty:
         return m
