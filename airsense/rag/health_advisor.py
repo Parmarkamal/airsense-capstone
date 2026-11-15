@@ -252,13 +252,22 @@ def _query_ollama(prompt: str, model: str) -> str:
     """
     Send a prompt to the local Ollama LLM and stream the response.
     Uses the Ollama REST API directly (no LangChain overhead).
+    Includes an explicit system prompt to prevent unwarranted RLHF medical refusals
+    on standard environmental PPE and air quality exposure questions.
     """
+    system_prompt = (
+        "You are AirSense, an expert Environmental Health & Air Quality Advisor for Indian cities. "
+        "You provide factual, actionable guidance on air pollution levels, PPE respirators (N95/FFP2), "
+        "indoor air purification, outdoor timing, and exposure management grounded strictly in CPCB NAQI and WHO 2021 standards. "
+        "Answering environmental safety, mask, and purifier questions is your primary purpose."
+    )
     payload = {
         "model": model,
         "prompt": prompt,
+        "system": system_prompt,
         "stream": False,
         "options": {
-            "temperature": 0.3,    # Low temperature for factual health advice
+            "temperature": 0.2,    # Low temperature for factual, reliable advice
             "top_p": 0.85,
             "num_predict": 350,    # Max tokens in response for snappy generation
         },
@@ -438,12 +447,16 @@ def ask_health_advisor(
         refusal_triggers = [
             "can't provide medical advice",
             "cannot provide medical advice",
+            "not provide medical advice",
             "i am not a doctor",
             "consult a medical professional",
             "consult a physician",
             "as an ai, i cannot",
+            "as an ai model",
+            "not a medical professional",
+            "seek medical advice",
         ]
-        is_canned_refusal = any(trigger in answer.lower() for trigger in refusal_triggers) and len(answer.split()) < 50
+        is_canned_refusal = any(trigger in answer.lower() for trigger in refusal_triggers) and len(answer.split()) < 75
         if is_canned_refusal:
             q_clean = question.lower()
             if "mask" in q_clean:
@@ -483,6 +496,51 @@ def ask_health_advisor(
                     "• **Classroom Air Quality:** Keep windows closed and ensure indoor activities during high pollution hours."
                 )
                 selected_model = f"{selected_model} (Grounded CPCB/WHO Child Protection)"
+            elif "heart" in q_clean or "cardiac" in q_clean or "cardiovascular" in q_clean:
+                answer = (
+                    "**Direct Summary:** Cardiovascular patients face acute risks from fine $PM_{2.5}$ particles, which enter the bloodstream and trigger inflammation and arterial vasoconstriction.\n\n"
+                    "**Actionable Precautions:**\n"
+                    "• **Exposure Limitation:** Stay indoors in air-conditioned or HEPA-filtered rooms during elevated AQI hours.\n"
+                    "• **Physical Exertion:** Avoid heavy outdoor lifting or walking, which increases myocardial oxygen demand in polluted air.\n"
+                    "• **Medication Readiness:** Keep prescribed cardiac medications on schedule and seek emergency care if experiencing chest tightness (CPCB/WHO)."
+                )
+                selected_model = f"{selected_model} (Grounded CPCB/WHO Cardiac Advisory)"
+            elif "pregnant" in q_clean or "pregnancy" in q_clean or "maternal" in q_clean:
+                answer = (
+                    "**Direct Summary:** WHO 2021 guidelines highlight that maternal exposure to elevated $PM_{2.5}$ and $NO_2$ is associated with low birth weight and gestational risks.\n\n"
+                    "**Actionable Precautions:**\n"
+                    "• **Avoid Peak Windows:** Completely avoid roadside exposure during peak morning and evening traffic hours.\n"
+                    "• **Personal Protection:** Wear a certified N95 respirator if traveling outdoors in AQI > 150.\n"
+                    "• **Indoor Air:** Maintain clean indoor air using HEPA filtration and wet-mopping rather than dry-sweeping."
+                )
+                selected_model = f"{selected_model} (Grounded CPCB/WHO Maternal Advisory)"
+            elif "elderly" in q_clean or "senior" in q_clean or "older" in q_clean:
+                answer = (
+                    "**Direct Summary:** For senior citizens, AQI above 100 (Moderate) begins to stress respiratory and vascular systems due to reduced lung elasticity.\n\n"
+                    "**Actionable Precautions:**\n"
+                    "• **Critical Threshold:** AQI > 200 (Poor) requires staying strictly indoors with windows shut.\n"
+                    "• **Hydration & Ventilation:** Stay well-hydrated and ventilate living spaces only during warm afternoon hours (1 PM – 4 PM).\n"
+                    "• **Pulse Oximetry:** Individuals with chronic obstructive pulmonary disease (COPD) should monitor oxygen saturation levels."
+                )
+                selected_model = f"{selected_model} (Grounded CPCB/WHO Senior Advisory)"
+            elif "asthma" in q_clean or "respiratory" in q_clean or "bronch" in q_clean:
+                answer = (
+                    "**Direct Summary:** Asthmatic individuals are hypersensitive to $SO_2$, $NO_2$, and fine particulates, which trigger acute airway bronchospasm.\n\n"
+                    "**Actionable Precautions:**\n"
+                    "• **Inhaler Access:** Always carry a prescribed rescue bronchodilator when stepping outdoors.\n"
+                    "• **Protective Equipment:** Use an N95 respirator snugly fitted to filter irritant dust and particulates.\n"
+                    "• **Avoid Early Mornings:** Cold morning smog traps ground-level pollutants; schedule any outdoor movement for the afternoon."
+                )
+                selected_model = f"{selected_model} (Grounded CPCB/WHO Asthma Advisory)"
+            elif "commute" in q_clean or "traffic" in q_clean or "transit" in q_clean:
+                answer = (
+                    "**Direct Summary:** Daily urban commuters face the highest daily acute exposure to vehicular $NO_2$, benzene, and black carbon soot.\n\n"
+                    "**Actionable Commute Guidance:**\n"
+                    "• **Two-Wheelers & Pedestrians:** Certified N95 or FFP2 respirators are essential during morning and evening rush hours.\n"
+                    "• **Four-Wheelers:** Keep vehicle windows rolled up and switch air conditioning to **Recirculation mode** to block tunnel/traffic exhaust.\n"
+                    "• **Route Choice:** Prefer wide arterial roads over congested bottleneck alleys where pollutants accumulate."
+                )
+                selected_model = f"{selected_model} (Grounded CPCB/WHO Commuter Advisory)"
             else:
                 answer = get_static_fallback_for_aqi(aqi_value=aqi_value, city=city_name)
                 selected_model = f"{selected_model} (CPCB NAQI Standard)"

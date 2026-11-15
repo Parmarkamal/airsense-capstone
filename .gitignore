@@ -70,6 +70,8 @@ $RECYCLE.BIN/
 # IDE and editor settings (keep repo clean)
 .idea/
 .vscode/
+.cursorrules
+.kiro/
 *.swp
 *.swo
 *~
