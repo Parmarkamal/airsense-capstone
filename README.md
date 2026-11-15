@@ -135,8 +135,5 @@ capstone_project/
 
 ---
 
-## 👥 Authors & Team
-- **Kamal Parmar** — Lead Architecture & Development
-- M.Sc. IT (Business Intelligence & Analytics), Semester 3
-- Gujarat University, CPC
+
 
