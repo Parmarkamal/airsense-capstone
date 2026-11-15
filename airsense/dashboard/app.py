@@ -35,6 +35,8 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
+import math
+import numpy as np
 import streamlit as st
 import pandas as pd
 from streamlit_folium import st_folium
@@ -513,9 +515,9 @@ def main():
 
         # Real-time atmospheric dispersion dynamics for Indian urban conditions
         now_hour = datetime.now(IST).hour
-        amb_temp = round(23.0 + 8.5 * np.sin(max(0, now_hour - 6) * np.pi / 14.0), 1)
-        amb_humidity = int(round(65.0 - 22.0 * np.sin(max(0, now_hour - 6) * np.pi / 14.0)))
-        disp_velocity = round(10.0 + 4.5 * np.cos(now_hour * np.pi / 12.0), 1)
+        amb_temp = round(23.0 + 8.5 * math.sin(max(0, now_hour - 6) * math.pi / 14.0), 1)
+        amb_humidity = int(round(65.0 - 22.0 * math.sin(max(0, now_hour - 6) * math.pi / 14.0)))
+        disp_velocity = round(10.0 + 4.5 * math.cos(now_hour * math.pi / 12.0), 1)
         wind_anim_speed = round(max(0.85, min(2.5, 18.0 / max(disp_velocity, 1.0))), 2)
 
         st.markdown(f"""
