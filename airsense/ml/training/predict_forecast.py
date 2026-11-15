@@ -166,12 +166,23 @@ def generate_city_48h_forecast(
         # Biological / physical clamp
         predicted_aqi = max(10.0, min(500.0, round(predicted_aqi, 1)))
 
-        # Update recursive buffers (AQI + pollutant approximations for next-step lags)
+        # Damped proportional scaling: preserves city-specific particulate baseline
+        # while allowing precursors (pm25, pm10, no2) to breathe dynamically with the
+        # predicted AQI trajectory rather than flatlining or snapping to generic static ratios.
+        prev_aqi = max(float(aqi_series[-1]), 1.0)
+        ratio = predicted_aqi / prev_aqi
+        damped_scale = 0.7 + 0.3 * ratio
+
+        next_pm25 = max(5.0, round(pm25_series[-1] * damped_scale, 2))
+        next_pm10 = max(10.0, round(pm10_series[-1] * damped_scale, 2))
+        next_no2 = max(2.0, round(no2_series[-1] * damped_scale, 2))
+
+        # Update recursive buffers (AQI + dynamically evolved pollutant precursors)
         aqi_series.append(predicted_aqi)
         timestamps.append(target_time)
-        pm25_series.append(predicted_aqi * 0.65)
-        pm10_series.append(predicted_aqi * 0.95)
-        no2_series.append(predicted_aqi * 0.15)
+        pm25_series.append(next_pm25)
+        pm10_series.append(next_pm10)
+        no2_series.append(next_no2)
 
         forecast_records.append({
             "generated_at": generated_at,

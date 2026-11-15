@@ -15,7 +15,8 @@ from docx.oxml import parse_xml
 from docx.oxml.ns import nsdecls
 
 PROJECT_ROOT = Path(__file__).resolve().parent
-OUTPUT_DOCX = PROJECT_ROOT / "AirSense_Capstone_Project_Report.docx"
+WORKSPACE_ROOT = Path(__file__).resolve().parents[3]
+OUTPUT_DOCX = WORKSPACE_ROOT / "AirSense_Capstone_Project_Report.docx"
 
 COLOR_PRIMARY_HEX = "1E293B"      # Dark slate
 COLOR_SECONDARY_HEX = "2563EB"    # Royal blue
@@ -620,7 +621,7 @@ def build_preliminary_pages(doc):
         ("    7.4 Deployment of the Model", "52"),
         ("        7.4.1 Production Model Artifact & 48h Forecaster", "52"),
         ("        7.4.2 RAG Knowledge Base & Ollama Integration", "53"),
-        ("        7.4.3 Result Application (Streamlit 5-View Platform)", "54"),
+        ("        7.4.3 Result Application (Streamlit 6-View Operational Cockpit)", "54"),
         ("        7.4.4 Power BI Executive Analytics Dashboard", "57"),
         ("        7.4.5 Automated Telegram Spike Alerting & MLOps Loop", "60"),
         ("Chapter 8: Conclusion & Future Scope", "63"),

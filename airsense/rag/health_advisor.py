@@ -88,6 +88,23 @@ _PRESCRIPTION_RE = re.compile(
     re.IGNORECASE,
 )
 
+# Phase 6.6 — Explicit clinical dosage pattern for output sanitization
+_CLINICAL_DOSAGE_RE = re.compile(
+    r"\b(\d+(?:\.\d+)?\s*(?:mg|mcg|ml|tablets?|capsules?|pills?)\b(?:\s+of\s+[\w\s]+)?)",
+    re.IGNORECASE,
+)
+
+
+def sanitize_llm_output(text: str) -> str:
+    """
+    Phase 6 Guardrail: Strips out clinical drug dosages or pharmaceutical prescriptions
+    hallucinated by the LLM, replacing them with a safe medical advisory warning.
+    """
+    if not text:
+        return ""
+    sanitized = _CLINICAL_DOSAGE_RE.sub("[Medical dosage removed — consult a physician]", text)
+    return sanitized
+
 _AIR_HEALTH_KEYWORDS = (
     "aqi", "air quality", "air pollution", "pollution", "pollutant",
     "pm2.5", "pm2_5", "pm25", "pm10", "no2", "ozone", "so2", "co",
@@ -545,9 +562,12 @@ def ask_health_advisor(
                 answer = get_static_fallback_for_aqi(aqi_value=aqi_value, city=city_name)
                 selected_model = f"{selected_model} (CPCB NAQI Standard)"
 
+    # Phase 6.6 — Sanitize any hallucinated clinical medical dosages
+    sanitized_answer = sanitize_llm_output(answer)
+
     # Phase 6.2 — Mandatory disclaimer on every advisory answer
     return {
-        "answer": append_medical_disclaimer(answer),
+        "answer": append_medical_disclaimer(sanitized_answer),
         "sources": sources,
         "model_used": selected_model,
         "chunks_retrieved": len(retrieved_chunks),

@@ -201,15 +201,15 @@ class TestFreshnessBadges:
         assert age < 1.0
 
     def test_delayed_badge(self):
-        ts = datetime.now(timezone.utc) - timedelta(hours=2)
+        ts = datetime.now(timezone.utc) - timedelta(hours=3.5)
         color, label, age = calculate_data_freshness(ts)
         assert color == "gold"
         assert "Delayed" in label
-        assert 1.0 <= age <= 3.0
+        assert 2.5 <= age <= 6.0
 
     def test_stale_badge(self):
-        ts = datetime.now(timezone.utc) - timedelta(hours=5)
+        ts = datetime.now(timezone.utc) - timedelta(hours=7)
         color, label, age = calculate_data_freshness(ts)
         assert color == "red"
         assert "Stale" in label
-        assert age > 3.0
+        assert age > 6.0
