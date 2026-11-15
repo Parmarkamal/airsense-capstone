@@ -356,9 +356,11 @@ def main():
                 index=1,
                 format_func=lambda s: f"{s} seconds",
             )
-            if st_autorefresh is not None:
+            if selected_view != "🤖 AI Health Advisor" and st_autorefresh is not None:
                 st_autorefresh(interval=refresh_interval * 1000, key="airsense_autorefresh")
-            st.caption(f"⏱️ Dashboard refreshes automatically every {refresh_interval}s")
+                st.caption(f"⏱️ Dashboard refreshes automatically every {refresh_interval}s")
+            elif selected_view == "🤖 AI Health Advisor":
+                st.caption("⏸️ Auto-refresh paused on AI Advisor tab to ensure smooth conversation.")
 
         col_btn1, col_btn2 = st.columns(2)
         with col_btn1:
