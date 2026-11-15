@@ -171,50 +171,52 @@ def render_ai_advisor_view(df_latest: pd.DataFrame | None = None) -> None:
         if not match.empty and pd.notna(match.iloc[0].get("aqi")):
             selected_aqi = float(match.iloc[0]["aqi"])
 
-    # Phase 6.4 — Persona quick-pills
-    render_persona_pills(df_latest=df_latest, city=selected_city)
+    # Track which query should be evaluated in this run (One-Click Instant Execution)
+    active_query: str | None = None
+
+    # Phase 6.4 — Persona quick-pills (One-click instant trigger)
+    pill_clicked = render_persona_pills(df_latest=df_latest, city=selected_city)
+    if pill_clicked:
+        active_query = pill_clicked
 
     st.markdown("---")
     
-    # ── Suggested Quick-Start Questions ───────────────────────────────────────
+    # ── Suggested Quick-Start Questions (One-Click Instant Trigger) ───────────
     st.markdown("#### 💡 Quick Questions — Click to Ask Instantly")
     cols = st.columns(2)
     for i, question in enumerate(SUGGESTED_QUESTIONS):
         with cols[i % 2]:
             if st.button(question, key=f"quick_q_{i}", use_container_width=True):
-                st.session_state.pending_question = question
+                active_query = question
     
     st.markdown("---")
     
-    # ── Chat Interface ─────────────────────────────────────────────────────────
+    # ── Custom Chat Form ───────────────────────────────────────────────────────
     st.markdown("#### 💬 Ask Your Own Question")
     
-    user_input = st.text_input(
-        "Type your air quality or health question:",
-        value=st.session_state.get("pending_question", ""),
-        placeholder="e.g. Is it safe for a diabetic patient to cycle in Pune today?",
-        key="chat_input",
-    )
+    with st.form("custom_chat_form", clear_on_submit=True):
+        user_input_text = st.text_input(
+            "Type your air quality or health question (Press Enter to submit):",
+            placeholder="e.g. Is it safe for an asthma patient to jog in Ahmedabad today?",
+            key="advisor_custom_input",
+        )
+        send_col, clear_col = st.columns([3, 1])
+        with send_col:
+            ask_submitted = st.form_submit_button("🔍 Ask AI Health Advisor", use_container_width=True, type="primary")
+        with clear_col:
+            clear_submitted = st.form_submit_button("🗑️ Clear Chat", use_container_width=True)
     
-    # Clear pending question after it's been placed in input
-    if "pending_question" in st.session_state:
-        del st.session_state.pending_question
-    
-    send_col, clear_col = st.columns([3, 1])
-    
-    with send_col:
-        ask_button = st.button("🔍 Ask AI Health Advisor", use_container_width=True, type="primary")
-    with clear_col:
-        clear_button = st.button("🗑️ Clear Chat", use_container_width=True)
-    
-    if clear_button:
+    if clear_submitted:
         st.session_state.chat_history = []
         st.rerun()
     
-    if ask_button and user_input.strip():
+    if ask_submitted and user_input_text.strip():
+        active_query = user_input_text.strip()
+    
+    # ── Execute Query (Instant Handler for Quick Buttons, Pills & Typed Inputs) ─
+    if active_query:
         live_context = _format_live_aqi_context(df_latest)
 
-        # Domain-refused / static-fallback answers do not require KB or Ollama
         spinner_msg = (
             "🧠 Applying safety guardrails + generating grounded health advice..."
             if ollama_ok else
@@ -222,7 +224,7 @@ def render_ai_advisor_view(df_latest: pd.DataFrame | None = None) -> None:
         )
         with st.spinner(spinner_msg):
             result = ask_health_advisor(
-                question=user_input.strip(),
+                question=active_query,
                 live_aqi_context=live_context,
                 current_aqi=selected_aqi,
                 city=selected_city,
@@ -240,7 +242,7 @@ def render_ai_advisor_view(df_latest: pd.DataFrame | None = None) -> None:
 
         st.session_state.chat_history.append({
             "role": "user",
-            "content": user_input.strip(),
+            "content": active_query,
         })
         st.session_state.chat_history.append({
             "role": "assistant",
@@ -251,6 +253,7 @@ def render_ai_advisor_view(df_latest: pd.DataFrame | None = None) -> None:
             "refused": result.get("refused", False),
             "low_confidence": result.get("low_confidence", False),
         })
+        st.rerun()
     
     # ── Display Chat History ───────────────────────────────────────────────────
     if st.session_state.chat_history:
