@@ -20,6 +20,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
+from dashboard.components.gauges import apply_dark_layout
 
 IST = timezone(timedelta(hours=5, minutes=30))
 
@@ -221,7 +222,7 @@ def render_combined_forecast_chart(
     fig.update_layout(
         title=dict(
             text=f"<b>48-Hour AQI Trajectory & Machine Learning Forecast (IST) — {city_name}</b>",
-            font=dict(size=16, color="#1E293B"),
+            font=dict(size=16, color="#E8ECF4"),
             x=0,
             y=0.96,
         ),
@@ -229,18 +230,19 @@ def render_combined_forecast_chart(
         margin=dict(l=10, r=20, t=50, b=25),
         hovermode="x unified",
         paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(248, 250, 252, 0.6)",
+        plot_bgcolor="rgba(0,0,0,0)",
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
         xaxis=dict(
-            title=dict(text="Timeline (Indian Standard Time — IST)", font=dict(size=12, color="#64748B")),
+            title=dict(text="Timeline (Indian Standard Time — IST)", font=dict(size=12, color="#E8ECF4")),
             showgrid=True,
-            gridcolor="#E2E8F0",
+            gridcolor="rgba(255,255,255,0.06)",
             tickformat="%b %d, %I:%M %p",
         ),
-        yaxis=dict(title="Air Quality Index (AQI)", showgrid=True, gridcolor="#E2E8F0"),
+        yaxis=dict(title="Air Quality Index (AQI)", showgrid=True, gridcolor="rgba(255,255,255,0.06)"),
         font={"family": "Inter, system-ui, sans-serif"},
     )
 
+    apply_dark_layout(fig)
     return fig
 
 
@@ -300,20 +302,20 @@ def render_feature_importance_chart() -> go.Figure:
     fig.update_layout(
         title=dict(
             text=chart_title,
-            font=dict(size=14, color="#1E293B"),
+            font=dict(size=14, color="#E8ECF4"),
             x=0,
         ),
         height=280,
         margin=dict(l=10, r=60, t=40, b=20),
         paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(248, 250, 252, 0.6)",
+        plot_bgcolor="rgba(0,0,0,0)",
         showlegend=False,
         xaxis=dict(
             title="Mean |SHAP value| (AQI units)",
             showgrid=True,
-            gridcolor="#E2E8F0",
+            gridcolor="rgba(255,255,255,0.06)",
             zeroline=True,
-            zerolinecolor="#CBD5E1",
+            zerolinecolor="rgba(255,255,255,0.1)",
         ),
         yaxis=dict(
             showgrid=False,
@@ -322,6 +324,7 @@ def render_feature_importance_chart() -> go.Figure:
         font={"family": "Inter, system-ui, sans-serif"},
     )
 
+    apply_dark_layout(fig)
     return fig
 
 
@@ -402,24 +405,25 @@ def render_benchmark_comparison_chart() -> go.Figure:
     fig.update_layout(
         title=dict(
             text="<b>Model Benchmark — LightGBM vs Naive Baselines</b>",
-            font=dict(size=14, color="#1E293B"),
+            font=dict(size=14, color="#E8ECF4"),
             x=0,
         ),
         barmode="group",
         height=300,
         margin=dict(l=10, r=20, t=40, b=20),
         paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(248, 250, 252, 0.6)",
+        plot_bgcolor="rgba(0,0,0,0)",
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
         xaxis=dict(showgrid=False, tickfont=dict(size=11)),
         yaxis=dict(
             title="Error (AQI units)",
             showgrid=True,
-            gridcolor="#E2E8F0",
+            gridcolor="rgba(255,255,255,0.06)",
         ),
         font={"family": "Inter, system-ui, sans-serif"},
     )
 
+    apply_dark_layout(fig)
     return fig
 
 

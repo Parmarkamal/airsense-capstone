@@ -17,7 +17,7 @@ import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from dashboard.components.gauges import get_aqi_category
+from dashboard.components.gauges import get_aqi_category, apply_dark_layout
 
 IST = timezone(timedelta(hours=5, minutes=30))
 
@@ -51,7 +51,7 @@ def render_city_ranking_chart(df_latest: pd.DataFrame) -> go.Figure:
             text=[f" <b>{val:.0f}</b> ({cat})" for val, cat in zip(df_sorted["effective_aqi"], categories)],
             textposition="outside",
             cliponaxis=False,
-            textfont=dict(color="#1E293B", size=12, family="Inter, system-ui, sans-serif"),
+            textfont=dict(color="#E8ECF4", size=12, family="Inter, system-ui, sans-serif"),
             hovertemplate="<b>%{y}</b><br>AQI: <b>%{x:.0f}</b> (%{text})<extra></extra>",
         )
     )
@@ -64,7 +64,7 @@ def render_city_ranking_chart(df_latest: pd.DataFrame) -> go.Figure:
     fig.update_layout(
         title=dict(
             text="<b>Urban Air Quality League</b> (Cleanest ➔ Most Polluted)",
-            font=dict(size=15, color="#1E293B"),
+            font=dict(size=15, color="#E8ECF4"),
             x=0,
             y=0.96,
         ),
@@ -74,13 +74,14 @@ def render_city_ranking_chart(df_latest: pd.DataFrame) -> go.Figure:
             title="Air Quality Index (AQI)",
             range=[0, max_val * 1.32],
             showgrid=True,
-            gridcolor="#E2E8F0",
+            gridcolor="rgba(255,255,255,0.06)",
         ),
         yaxis=dict(title="", automargin=True),
         paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(248, 250, 252, 0.6)",
+        plot_bgcolor="rgba(0,0,0,0)",
         font={"family": "Inter, system-ui, sans-serif"},
     )
+    apply_dark_layout(fig)
     return fig
 
 
@@ -116,7 +117,7 @@ def render_pm_ratio_chart(df_latest: pd.DataFrame) -> go.Figure:
             text=[f"<b>{r:.2f}</b>" for r in df_valid["pm_ratio"]],
             textposition="outside",
             cliponaxis=False,
-            textfont=dict(color="#1E293B", size=12),
+            textfont=dict(color="#E8ECF4", size=12),
             hovertemplate="<b>%{x}</b><br>PM2.5/PM10 Ratio: <b>%{y:.2f}</b><extra></extra>",
         )
     )
@@ -138,7 +139,7 @@ def render_pm_ratio_chart(df_latest: pd.DataFrame) -> go.Figure:
     fig.update_layout(
         title=dict(
             text="<b>Particulate Diagnostic: PM2.5 / PM10 Ratio</b>",
-            font=dict(size=15, color="#1E293B"),
+            font=dict(size=15, color="#E8ECF4"),
             x=0,
             y=0.96,
         ),
@@ -146,15 +147,16 @@ def render_pm_ratio_chart(df_latest: pd.DataFrame) -> go.Figure:
             title="PM2.5 to PM10 Ratio",
             range=[0, max(1.15, max_ratio * 1.25)],
             showgrid=True,
-            gridcolor="#E2E8F0",
+            gridcolor="rgba(255,255,255,0.06)",
         ),
         xaxis=dict(title=""),
         height=320,
         margin=dict(l=10, r=20, t=45, b=25),
         paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(248, 250, 252, 0.6)",
+        plot_bgcolor="rgba(0,0,0,0)",
         font={"family": "Inter, system-ui, sans-serif"},
     )
+    apply_dark_layout(fig)
     return fig
 
 
@@ -214,7 +216,7 @@ def render_diurnal_pattern_chart(history_df: pd.DataFrame) -> go.Figure:
     fig.update_layout(
         title=dict(
             text="<b>Diurnal (24-Hour) Pollution Rhythm (IST)</b>",
-            font=dict(size=15, color="#1E293B"),
+            font=dict(size=15, color="#E8ECF4"),
             x=0,
             y=0.96,
         ),
@@ -224,15 +226,16 @@ def render_diurnal_pattern_chart(history_df: pd.DataFrame) -> go.Figure:
             tick0=0,
             dtick=2,
             showgrid=True,
-            gridcolor="#E2E8F0",
+            gridcolor="rgba(255,255,255,0.06)",
         ),
-        yaxis=dict(title="Average AQI", showgrid=True, gridcolor="#E2E8F0"),
+        yaxis=dict(title="Average AQI", showgrid=True, gridcolor="rgba(255,255,255,0.06)"),
         height=320,
         margin=dict(l=10, r=20, t=45, b=25),
         paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(248, 250, 252, 0.6)",
+        plot_bgcolor="rgba(0,0,0,0)",
         font={"family": "Inter, system-ui, sans-serif"},
     )
+    apply_dark_layout(fig)
     return fig
 
 
@@ -355,7 +358,7 @@ def render_wow_trend_chart(history_df: pd.DataFrame, city_name: str) -> go.Figur
             xref="paper", x=0.98, yref="paper", y=0.95,
             showarrow=False,
             font=dict(size=14, color=color, family="Inter, system-ui, sans-serif"),
-            bgcolor="rgba(255,255,255,0.8)",
+            bgcolor="rgba(15,23,42,0.85)",
             bordercolor=color,
             borderwidth=1,
             borderpad=4,
@@ -364,18 +367,19 @@ def render_wow_trend_chart(history_df: pd.DataFrame, city_name: str) -> go.Figur
     fig.update_layout(
         title=dict(
             text=f"<b>Week-over-Week AQI Trend — {city_name}</b>",
-            font=dict(size=15, color="#1E293B"),
+            font=dict(size=15, color="#E8ECF4"),
             x=0, y=0.96,
         ),
-        xaxis=dict(title="", showgrid=True, gridcolor="#E2E8F0"),
-        yaxis=dict(title="7-Day Rolling Avg AQI", showgrid=True, gridcolor="#E2E8F0"),
+        xaxis=dict(title="", showgrid=True, gridcolor="rgba(255,255,255,0.06)"),
+        yaxis=dict(title="7-Day Rolling Avg AQI", showgrid=True, gridcolor="rgba(255,255,255,0.06)"),
         height=320,
         margin=dict(l=10, r=20, t=45, b=25),
         paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(248, 250, 252, 0.6)",
+        plot_bgcolor="rgba(0,0,0,0)",
         font={"family": "Inter, system-ui, sans-serif"},
         hovermode="x unified",
     )
+    apply_dark_layout(fig)
     return fig
 
 
@@ -558,17 +562,18 @@ def render_standards_comparison_chart(pm25_val: float) -> go.Figure:
     fig.update_layout(
         title=dict(
             text=f"<b>Dual Standards Divergence for PM2.5 = {pm25_val:.1f} µg/m³</b>",
-            font=dict(size=14, color="#1E293B"),
+            font=dict(size=14, color="#E8ECF4"),
             x=0,
         ),
         height=220,
         margin=dict(l=10, r=20, t=40, b=20),
-        xaxis=dict(title="Index Value (Scale 0–500)", range=[0, 520], showgrid=True, gridcolor="#E2E8F0"),
+        xaxis=dict(title="Index Value (Scale 0–500)", range=[0, 520], showgrid=True, gridcolor="rgba(255,255,255,0.06)"),
         yaxis=dict(title="", automargin=True),
         paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(248, 250, 252, 0.6)",
+        plot_bgcolor="rgba(0,0,0,0)",
         font={"family": "Inter, system-ui, sans-serif"},
     )
+    apply_dark_layout(fig)
     return fig
 
 

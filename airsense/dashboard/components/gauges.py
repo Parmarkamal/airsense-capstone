@@ -20,60 +20,60 @@ import plotly.graph_objects as go
 IST = timezone(timedelta(hours=5, minutes=30))
 
 
-# CPCB NAAQS AQI Classification Bands & Palette
+# CPCB NAAQS AQI Classification Bands & Palette (dark-UI CPCB hue family)
 AQI_LEVELS = [
     {
         "min": 0,
         "max": 50,
         "label": "Good",
-        "color": "#10B981",       # Emerald Green
-        "bg_color": "#D1FAE5",
-        "text_color": "#065F46",
+        "color": "#059669",       # Dark emerald green
+        "bg_color": "rgba(15,23,42,0.75)",
+        "text_color": "#059669",
         "advisory": "Air quality is satisfactory and poses little or no health risk. Enjoy outdoor activities.",
     },
     {
         "min": 51,
         "max": 100,
         "label": "Satisfactory",
-        "color": "#84CC16",       # Lime Green
-        "bg_color": "#ECFCCB",
-        "text_color": "#365314",
+        "color": "#65A30D",       # Olive green
+        "bg_color": "rgba(15,23,42,0.75)",
+        "text_color": "#65A30D",
         "advisory": "Air quality is acceptable. Sensitive individuals may experience minor breathing discomfort.",
     },
     {
         "min": 101,
         "max": 200,
         "label": "Moderate",
-        "color": "#F59E0B",       # Amber / Orange
-        "bg_color": "#FEF3C7",
-        "text_color": "#92400E",
+        "color": "#D97706",       # Amber
+        "bg_color": "rgba(15,23,42,0.75)",
+        "text_color": "#D97706",
         "advisory": "Breathing discomfort to people with lung disease, asthma, and heart conditions. Limit prolonged exertion.",
     },
     {
         "min": 201,
         "max": 300,
         "label": "Poor",
-        "color": "#EF4444",       # Red
-        "bg_color": "#FEE2E2",
-        "text_color": "#991B1B",
+        "color": "#EA580C",       # Orange-red
+        "bg_color": "rgba(15,23,42,0.75)",
+        "text_color": "#EA580C",
         "advisory": "Breathing discomfort to most people on prolonged exposure. Wear N95 masks outdoors.",
     },
     {
         "min": 301,
         "max": 400,
         "label": "Very Poor",
-        "color": "#8B5CF6",       # Purple
-        "bg_color": "#EDE9FE",
-        "text_color": "#5B21B6",
+        "color": "#DC2626",       # Red
+        "bg_color": "rgba(15,23,42,0.75)",
+        "text_color": "#DC2626",
         "advisory": "Respiratory illness on prolonged exposure. Sensitive groups should remain indoors.",
     },
     {
         "min": 401,
         "max": 500,
         "label": "Severe",
-        "color": "#7F1D1D",       # Deep Maroon
-        "bg_color": "#FEE2E2",
-        "text_color": "#450A0A",
+        "color": "#7F1D1D",       # Deep maroon
+        "bg_color": "rgba(15,23,42,0.75)",
+        "text_color": "#9F1239",
         "advisory": "Affects healthy people and seriously impacts those with existing disease. Avoid all outdoor physical activity.",
     },
 ]
@@ -85,8 +85,8 @@ def get_aqi_category(aqi_val: float | None) -> dict[str, Any]:
         return {
             "label": "No Data",
             "color": "#9CA3AF",
-            "bg_color": "#F3F4F6",
-            "text_color": "#374151",
+            "bg_color": "rgba(15,23,42,0.75)",
+            "text_color": "#94A3B8",
             "advisory": "Monitoring data currently unavailable for this station.",
         }
 
@@ -101,6 +101,44 @@ def get_aqi_category(aqi_val: float | None) -> dict[str, Any]:
     return AQI_LEVELS[0]
 
 
+def apply_dark_layout(fig: "go.Figure") -> "go.Figure":
+    """Apply a consistent dark-theme layout to any Plotly figure.
+
+    Sets transparent backgrounds, light font colours, subtle gridlines,
+    and removes all legacy light-mode colour overrides from titles, axes,
+    annotations, and traces.  Call this at the end of every chart function.
+    """
+    fig.update_layout(
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        font=dict(color="#E8ECF4", family="Inter, system-ui, sans-serif"),
+        title_font_color="#E8ECF4",
+        xaxis=dict(
+            gridcolor="rgba(255,255,255,0.06)",
+            color="#E8ECF4",
+            tickfont=dict(color="#E8ECF4"),
+            title_font=dict(color="#E8ECF4"),
+        ),
+        yaxis=dict(
+            gridcolor="rgba(255,255,255,0.06)",
+            color="#E8ECF4",
+            tickfont=dict(color="#E8ECF4"),
+            title_font=dict(color="#E8ECF4"),
+        ),
+        legend=dict(
+            font=dict(color="#E8ECF4"),
+            bgcolor="rgba(0,0,0,0)",
+        ),
+    )
+    # Clear any dark text that was baked into traces
+    fig.update_traces(textfont_color="#E8ECF4", selector=dict(type="bar"))
+    # Update annotation font colours
+    for ann in fig.layout.annotations:
+        if ann.font and ann.font.color in ("#1E293B", "#475569", "#64748B"):
+            ann.font.color = "#E8ECF4"
+    return fig
+
+
 def render_aqi_gauge(city_name: str, aqi_val: float | None) -> go.Figure:
     """Create a sleek, modern Plotly semicircular gauge meter."""
     category = get_aqi_category(aqi_val)
@@ -113,7 +151,7 @@ def render_aqi_gauge(city_name: str, aqi_val: float | None) -> go.Figure:
             domain={"x": [0, 1], "y": [0, 1]},
             title={
                 "text": f"<b>{city_name}</b><br><span style='font-size:14px;color:{category['color']}'>{category['label'].upper()}</span>",
-                "font": {"size": 20, "color": "#1E293B"},
+                "font": {"size": 20, "color": "#E8ECF4"},
             },
             number={
                 "font": {"size": 42, "color": category["color"], "family": "Inter, sans-serif"},
@@ -122,15 +160,15 @@ def render_aqi_gauge(city_name: str, aqi_val: float | None) -> go.Figure:
             gauge={
                 "axis": {"range": [0, 500], "tickwidth": 1, "tickcolor": "#94A3B8", "dtick": 100},
                 "bar": {"color": category["color"], "thickness": 0.3},
-                "bgcolor": "rgba(241, 245, 249, 0.6)",
+                "bgcolor": "rgba(15,23,42,0.6)",
                 "borderwidth": 1,
-                "bordercolor": "#E2E8F0",
+                "bordercolor": "rgba(255,255,255,0.1)",
                 "steps": [
-                    {"range": [0, 50], "color": "rgba(16, 185, 129, 0.15)"},
-                    {"range": [50, 100], "color": "rgba(132, 204, 22, 0.15)"},
-                    {"range": [100, 200], "color": "rgba(245, 158, 11, 0.15)"},
-                    {"range": [200, 300], "color": "rgba(239, 68, 68, 0.15)"},
-                    {"range": [300, 400], "color": "rgba(139, 92, 246, 0.15)"},
+                    {"range": [0, 50], "color": "rgba(5, 150, 105, 0.15)"},
+                    {"range": [50, 100], "color": "rgba(101, 163, 13, 0.15)"},
+                    {"range": [100, 200], "color": "rgba(217, 119, 6, 0.15)"},
+                    {"range": [200, 300], "color": "rgba(234, 88, 12, 0.15)"},
+                    {"range": [300, 400], "color": "rgba(220, 38, 38, 0.15)"},
                     {"range": [400, 500], "color": "rgba(127, 29, 29, 0.2)"},
                 ],
                 "threshold": {
@@ -148,6 +186,7 @@ def render_aqi_gauge(city_name: str, aqi_val: float | None) -> go.Figure:
         paper_bgcolor="rgba(0,0,0,0)",
         font={"family": "Inter, system-ui, sans-serif"},
     )
+    apply_dark_layout(fig)
     return fig
 
 
@@ -203,11 +242,12 @@ def render_pollutants_bar(row: pd.Series) -> go.Figure:
         height=205,
         margin=dict(l=10, r=20, t=15, b=5),
         paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(248, 250, 252, 0.6)",
-        xaxis=dict(title="", showgrid=True, gridcolor="#E2E8F0"),
+        plot_bgcolor="rgba(0,0,0,0)",
+        xaxis=dict(title="", showgrid=True, gridcolor="rgba(255,255,255,0.06)"),
         yaxis=dict(title="", automargin=True),
         font={"family": "Inter, system-ui, sans-serif", "size": 11},
     )
+    apply_dark_layout(fig)
     return fig
 
 
@@ -275,21 +315,22 @@ def render_history_trend(history_df: pd.DataFrame, city_name: str) -> go.Figure:
     fig.update_layout(
         title=dict(
             text=f"<b>24-Hour Air Quality Profile (IST) — {city_name}</b>",
-            font=dict(size=14, color="#1E293B"),
+            font=dict(size=14, color="#E8ECF4"),
         ),
         height=270,
         margin=dict(l=15, r=15, t=35, b=15),
         hovermode="x unified",
         paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(248, 250, 252, 0.6)",
+        plot_bgcolor="rgba(0,0,0,0)",
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
         xaxis=dict(
-            title=dict(text="Time (Indian Standard Time — IST)", font=dict(size=11, color="#64748B")),
+            title=dict(text="Time (Indian Standard Time — IST)", font=dict(size=11, color="#E8ECF4")),
             showgrid=True,
-            gridcolor="#E2E8F0",
+            gridcolor="rgba(255,255,255,0.06)",
             tickformat="%I:%M %p",
         ),
-        yaxis=dict(title="Index Value (CPCB NAQI)", showgrid=True, gridcolor="#E2E8F0", zeroline=False),
+        yaxis=dict(title="Index Value (CPCB NAQI)", showgrid=True, gridcolor="rgba(255,255,255,0.06)", zeroline=False),
         font={"family": "Inter, system-ui, sans-serif"},
     )
+    apply_dark_layout(fig)
     return fig

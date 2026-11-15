@@ -124,27 +124,33 @@ st.markdown("""
     }
     
     .disclaimer-banner {
-        background-color: rgba(254, 243, 199, 0.95);
-        border-left: 4px solid #F59E0B;
-        color: #92400E;
-        padding: 6px 14px;
+        background: rgba(15, 23, 42, 0.75);
+        border-left: 4px solid #D97706;
+        color: #E2E8F0;
+        padding: 8px 14px;
         border-radius: 6px;
         font-size: 11.5px;
         margin-bottom: 8px;
         line-height: 1.35;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+        border-right: 1px solid rgba(255, 255, 255, 0.05);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     }
 
     .replay-banner {
-        background: linear-gradient(135deg, rgba(254, 243, 199, 0.9) 0%, rgba(253, 230, 138, 0.9) 100%);
-        border: 2px solid #F59E0B;
-        color: #78350F;
+        background: rgba(15, 23, 42, 0.85);
+        border-left: 4px solid #F59E0B;
+        border-top: 1px solid rgba(245, 158, 11, 0.3);
+        border-right: 1px solid rgba(245, 158, 11, 0.3);
+        border-bottom: 1px solid rgba(245, 158, 11, 0.3);
+        color: #FDE68A;
         padding: 8px 16px;
         border-radius: 8px;
         font-size: 12px;
         margin-bottom: 8px;
         font-weight: 600;
         text-align: center;
-        box-shadow: 0 2px 6px rgba(245, 158, 11, 0.2);
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
     }
 
     /* Glassmorphic Urban Hub KPI Cards with Tactile Hover Lift */
@@ -365,6 +371,7 @@ def main():
         col_btn1, col_btn2 = st.columns(2)
         with col_btn1:
             if st.button("🔄 Refresh", use_container_width=True):
+                st.cache_data.clear()
                 st.rerun()
         with col_btn2:
             if st.button("⚡ Live Sync", use_container_width=True, help="Trigger live API fetch, auto-heal voids, and update ML forecasts"):
@@ -372,6 +379,7 @@ def main():
                     try:
                         from ingestion.fetch_aqi import run_fetch
                         run_fetch()
+                        st.cache_data.clear()
                         st.toast("✅ Live telemetry ingested & forecasts updated!", icon="🚀")
                         st.rerun()
                     except Exception as sync_err:
@@ -424,6 +432,34 @@ def main():
         CPCB NAAQS and WHO guidelines for educational and analytical purposes. This platform does not provide medical diagnoses.
     </div>
     """, unsafe_allow_html=True)
+
+# ── Fetch Live Data ────────────────────────────────────────────────────────
+@st.cache_data(ttl=600)
+def _fetch_open_meteo_current_weather(lat: float, lon: float) -> tuple[float, int, float, bool]:
+    """Fetch live surface weather from Open-Meteo with graceful model fallback."""
+    try:
+        import json as _json
+        import urllib.request as _urllib_req
+        url = (
+            f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}"
+            "&current=temperature_2m,relative_humidity_2m,wind_speed_10m"
+        )
+        req = _urllib_req.Request(url, headers={"User-Agent": "AirSense/1.0"})
+        with _urllib_req.urlopen(req, timeout=4.0) as resp:
+            data = _json.loads(resp.read().decode())
+            curr = data.get("current", {})
+            t = round(float(curr["temperature_2m"]), 1)
+            h = int(round(float(curr["relative_humidity_2m"])))
+            w = round(float(curr["wind_speed_10m"]), 1)
+            return t, h, w, False
+    except Exception:
+        pass
+    now_h = datetime.now(IST).hour
+    m_temp = round(23.0 + 8.5 * math.sin(max(0, now_h - 6) * math.pi / 14.0), 1)
+    m_hum = int(round(65.0 - 22.0 * math.sin(max(0, now_h - 6) * math.pi / 14.0)))
+    m_wind = round(10.0 + 4.5 * math.cos(now_h * math.pi / 12.0), 1)
+    return m_temp, m_hum, m_wind, True
+
 
     # ── Fetch Live Data ────────────────────────────────────────────────────────
     df_latest = get_latest_readings_all_cities(engine)
@@ -479,7 +515,7 @@ def main():
                     <div style="margin-top:2px; font-size:9.5px; font-weight:600; color:{freshness_color};">
                         {freshness_label}
                     </div>
-                    <div style="margin-top:2px; font-size:8.5px; color:#64748B; line-height:1.1;">
+                    <div style="margin-top:4px; font-size:11px; font-weight:600; color:#E2E8F0; line-height:1.2; background:rgba(15,23,42,0.65); padding:2px 6px; border-radius:4px; border:1px solid rgba(255,255,255,0.06);">
                         {prov['badge']}
                     </div>
                 </div>
@@ -515,11 +551,11 @@ def main():
         }
         city_aura = aura_palette.get(cat_obj.get("label", "Moderate"), "rgba(56, 189, 248, 0.08)")
 
-        # Real-time atmospheric dispersion dynamics for Indian urban conditions
-        now_hour = datetime.now(IST).hour
-        amb_temp = round(23.0 + 8.5 * math.sin(max(0, now_hour - 6) * math.pi / 14.0), 1)
-        amb_humidity = int(round(65.0 - 22.0 * math.sin(max(0, now_hour - 6) * math.pi / 14.0)))
-        disp_velocity = round(10.0 + 4.5 * math.cos(now_hour * math.pi / 12.0), 1)
+        # Real-time atmospheric dispersion dynamics (live Open-Meteo with modeled baseline fallback)
+        lat_val = float(city_data["lat"]) if pd.notna(city_data.get("lat")) else 23.0225
+        lon_val = float(city_data["lon"]) if pd.notna(city_data.get("lon")) else 72.5714
+        amb_temp, amb_humidity, disp_velocity, is_modeled = _fetch_open_meteo_current_weather(lat_val, lon_val)
+        weather_label = "Climatological baseline (modelled)" if is_modeled else "Live Open-Meteo Ingest"
         wind_anim_speed = round(max(0.85, min(2.5, 18.0 / max(disp_velocity, 1.0))), 2)
 
         st.markdown(f"""
@@ -576,7 +612,7 @@ def main():
                     <div style="font-size:10.5px; font-weight:700; color:#38BDF8; display:flex; align-items:center; gap:6px;">
                         <span class="radar-beacon"></span> Live Atmospheric Dispersion Vector
                     </div>
-                    <div style="font-size:9px; color:#94A3B8;">Boundary-layer ventilation active ({disp_velocity} km/h)</div>
+                    <div style="font-size:9px; color:#94A3B8;">{weather_label} · Active ({disp_velocity} km/h)</div>
                 </div>
                 <svg class="wind-svg" viewBox="0 0 140 22" xmlns="http://www.w3.org/2000/svg">
                     <path class="wind-line" d="M 0 5 Q 35 1 70 5 T 140 5" />
@@ -597,11 +633,11 @@ def main():
 
             # Health recommendation card
             st.markdown(f"""
-            <div style="background-color:{cat_obj['bg_color']}; border-left: 4px solid {cat_obj['color']}; padding: 8px 12px; border-radius: 6px; margin-top: 4px;">
-                <div style="font-weight:700; color:{cat_obj['text_color']}; font-size:12px; margin-bottom:2px;">
+            <div style="background-color:rgba(15,23,42,0.75); border-left: 4px solid {cat_obj['color']}; padding: 10px 14px; border-radius: 6px; margin-top: 4px; border-top: 1px solid rgba(255,255,255,0.05); border-right: 1px solid rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.05);">
+                <div style="font-weight:700; color:{cat_obj['color']}; font-size:12.5px; margin-bottom:3px;">
                     Health Advisory — {cat_obj['label']} Air Quality
                 </div>
-                <div style="color:{cat_obj['text_color']}; font-size:11.5px; line-height:1.4;">
+                <div style="color:#E2E8F0; font-size:11.5px; line-height:1.45;">
                     {cat_obj['advisory']}
                 </div>
             </div>
@@ -706,9 +742,11 @@ def main():
                     🎉 <b>Prescriptive Policy Impact:</b> Interventions lower urban exposure by <b>{pts_saved} AQI points</b> 
                     ({base_cat_obj['label']} ➔ {sim_cat_obj['label']}). Primary determinant shifted to <b>{sim_prom}</b>.
                 </div>
-                <div style="background:#0F172A; border-left:4px solid #38BDF8; padding:8px 12px; border-radius:6px; font-size:11.5px; color:#E2E8F0; margin-top:6px; line-height:1.4;">
+                <div style="background:rgba(15,23,42,0.85); border-left:4px solid #38BDF8; padding:10px 14px; border-radius:6px; font-size:11.5px; color:#E2E8F0; margin-top:6px; line-height:1.45; border-top:1px solid rgba(255,255,255,0.05); border-right:1px solid rgba(255,255,255,0.05); border-bottom:1px solid rgba(255,255,255,0.05);">
                     🏥 <b>Est. Daily ER Admissions Avoided:</b> ~{resp_risk_reduction}% &nbsp;|&nbsp; 💼 <b>Est. Urban Productivity Saved:</b> ₹{prod_saved_lakhs} Lakhs / day <span style="color:#94A3B8;">(per 1M exposed population)</span><br>
-                    <span style="font-size:10px; color:#64748B;">*Grounding: Indian ICMR/WHO epidemiological elasticity: ~0.45% acute respiratory admission reduction & ₹18,000 workforce loss prevention per AQI point per 100k citizens.</span>
+                    <div style="margin-top:4px; font-size:10px; color:#94A3B8; font-style:italic;">
+                        ℹ️ <b>Illustrative estimate:</b> Calculated using published Indian public health elasticity (ICMR/WHO: ~0.45% acute respiratory admission reduction & ₹18,000 workforce loss prevention per AQI point per 100k citizens). Actual impacts vary with urban density and season.
+                    </div>
                 </div>
                 """, unsafe_allow_html=True)
             else:
@@ -781,13 +819,13 @@ def main():
 
         # Map Legend Bar
         st.markdown("""
-        <div style="display: flex; justify-content: space-around; background: #F8FAFC; padding: 12px 16px; border-radius: 8px; border: 1px solid #E2E8F0; margin-top: 12px; font-size: 12px;">
-            <span>🟢 <b>Good</b> (0-50)</span>
-            <span>🍏 <b>Satisfactory</b> (51-100)</span>
-            <span>🟠 <b>Moderate</b> (101-200)</span>
-            <span>🔴 <b>Poor</b> (201-300)</span>
-            <span>🟣 <b>Very Poor</b> (301-400)</span>
-            <span>🟤 <b>Severe</b> (401-500)</span>
+        <div style="display: flex; justify-content: space-around; flex-wrap: wrap; gap: 8px; background: rgba(15,23,42,0.85); backdrop-filter: blur(12px); padding: 12px 16px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08); margin-top: 12px; font-size: 12px; color: #E8ECF4;">
+            <span><span style="color:#059669; font-size:14px;">●</span> <b>Good</b> (0–50)</span>
+            <span><span style="color:#65A30D; font-size:14px;">●</span> <b>Satisfactory</b> (51–100)</span>
+            <span><span style="color:#D97706; font-size:14px;">●</span> <b>Moderate</b> (101–200)</span>
+            <span><span style="color:#EA580C; font-size:14px;">●</span> <b>Poor</b> (201–300)</span>
+            <span><span style="color:#DC2626; font-size:14px;">●</span> <b>Very Poor</b> (301–400)</span>
+            <span><span style="color:#7F1D1D; font-size:14px;">●</span> <b>Severe</b> (401–500)</span>
         </div>
         """, unsafe_allow_html=True)
 

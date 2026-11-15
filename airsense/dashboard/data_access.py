@@ -19,6 +19,7 @@ IST = timezone(timedelta(hours=5, minutes=30))
 from typing import Any
 
 import pandas as pd
+import streamlit as st
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
@@ -129,7 +130,8 @@ def get_provenance_badge(row: pd.Series | dict[str, Any]) -> dict[str, str]:
         }
 
 
-def get_latest_readings_all_cities(engine: Engine) -> pd.DataFrame:
+@st.cache_data(ttl=15)
+def get_latest_readings_all_cities(_engine: Engine) -> pd.DataFrame:
     """
     Fetch the most recent reading for each city from the aqi_readings hypertable.
     Uses DISTINCT ON (city) ordered by time DESC for peak performance.
@@ -162,7 +164,7 @@ def get_latest_readings_all_cities(engine: Engine) -> pd.DataFrame:
         ORDER BY city, time DESC;
     """)
     try:
-        with engine.connect() as conn:
+        with _engine.connect() as conn:
             df = pd.read_sql(query, conn)
         if df.empty:
             return df
@@ -214,7 +216,8 @@ def get_latest_readings_all_cities(engine: Engine) -> pd.DataFrame:
         return pd.DataFrame()
 
 
-def get_city_rolling_cpcb_aqi(engine: Engine, city_slug: str) -> dict[str, Any]:
+@st.cache_data(ttl=15)
+def get_city_rolling_cpcb_aqi(_engine: Engine, city_slug: str) -> dict[str, Any]:
     """
     Compute official 24-hour rolling CPCB NAQI for a city following CPCB 2014 guidelines:
       - 24-hour averages for PM2.5, PM10, NO2, SO2 (requires >= 16 valid hourly readings)
@@ -229,7 +232,7 @@ def get_city_rolling_cpcb_aqi(engine: Engine, city_slug: str) -> dict[str, Any]:
         LIMIT 24;
     """)
     try:
-        with engine.connect() as conn:
+        with _engine.connect() as conn:
             df = pd.read_sql(query, conn, params={"city_slug": city_slug})
         if df.empty:
             return {
@@ -283,7 +286,8 @@ def get_city_rolling_cpcb_aqi(engine: Engine, city_slug: str) -> dict[str, Any]:
         }
 
 
-def get_city_history(engine: Engine, city_slug: str, limit: int = 48) -> pd.DataFrame:
+@st.cache_data(ttl=15)
+def get_city_history(_engine: Engine, city_slug: str, limit: int = 48) -> pd.DataFrame:
     """
     Fetch recent chronological readings for a specific city.
     Restricts results strictly to the contiguous recent period (last 28 hours
@@ -321,7 +325,7 @@ def get_city_history(engine: Engine, city_slug: str, limit: int = 48) -> pd.Data
         SELECT * FROM deduped ORDER BY time ASC;
     """)
     try:
-        with engine.connect() as conn:
+        with _engine.connect() as conn:
             df = pd.read_sql(query, conn, params={"city_slug": city_slug})
         if not df.empty:
             df = df.sort_values(by="time", ascending=True).reset_index(drop=True)
@@ -331,7 +335,8 @@ def get_city_history(engine: Engine, city_slug: str, limit: int = 48) -> pd.Data
         return pd.DataFrame()
 
 
-def get_pipeline_stats(engine: Engine) -> dict[str, Any]:
+@st.cache_data(ttl=15)
+def get_pipeline_stats(_engine: Engine) -> dict[str, Any]:
     """
     Return operational counts: total readings, error count, and last ingested event time.
     """
@@ -341,7 +346,7 @@ def get_pipeline_stats(engine: Engine) -> dict[str, Any]:
         "latest_fetch": None,
     }
     try:
-        with engine.connect() as conn:
+        with _engine.connect() as conn:
             readings_res = conn.execute(text("SELECT COUNT(*), MAX(fetched_at) FROM aqi_readings;")).fetchone()
             if readings_res:
                 stats["total_readings"] = readings_res[0] or 0
@@ -355,7 +360,8 @@ def get_pipeline_stats(engine: Engine) -> dict[str, Any]:
     return stats
 
 
-def get_city_forecast(engine: Engine, city_slug: str) -> pd.DataFrame:
+@st.cache_data(ttl=30)
+def get_city_forecast(_engine: Engine, city_slug: str) -> pd.DataFrame:
     """
     Query the latest 48-hour forecast for a city from aqi_forecasts.
     Filters out historical forecast records older than 1 hour.
@@ -371,7 +377,7 @@ def get_city_forecast(engine: Engine, city_slug: str) -> pd.DataFrame:
         LIMIT 48;
     """)
     try:
-        with engine.connect() as conn:
+        with _engine.connect() as conn:
             df = pd.read_sql(query, conn, params={"city_slug": city_slug})
 
         # Self-healing: auto-regenerate fresh 48h projections if table has expired
@@ -379,8 +385,8 @@ def get_city_forecast(engine: Engine, city_slug: str) -> pd.DataFrame:
             try:
                 from ml.training.predict_forecast import run_all_forecasts_and_save
                 logger.info("Forecast for %s has <12 future hours; auto-regenerating fresh 48h forecast...", city_slug)
-                run_all_forecasts_and_save(engine)
-                with engine.connect() as conn:
+                run_all_forecasts_and_save(_engine)
+                with _engine.connect() as conn:
                     df = pd.read_sql(query, conn, params={"city_slug": city_slug})
             except Exception as auto_exc:
                 logger.warning("Auto-forecast regeneration fallback error: %s", auto_exc)

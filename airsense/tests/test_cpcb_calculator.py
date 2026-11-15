@@ -72,11 +72,11 @@ def test_cpcb_category_mapping():
     """Verify categories and color mapping."""
     cat, color = get_cpcb_category(25)
     assert cat == "Good"
-    assert color == "#00E400"
+    assert color == "#059669"  # Dark emerald green (dark-UI CPCB palette)
 
     cat, color = get_cpcb_category(75)
     assert cat == "Satisfactory"
-    assert color == "#92D050"
+    assert color == "#65A30D"  # Olive green (dark-UI CPCB palette)
 
     cat, color = get_cpcb_category(150)
     assert cat == "Moderate"

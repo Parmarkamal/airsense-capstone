@@ -22,14 +22,14 @@ def create_india_air_map(df_latest: pd.DataFrame) -> folium.Map:
     """
     Generate an interactive Folium map centered on India with color-coded
     air quality bubbles for all monitored urban centers.
-    Uses free, open tile providers that require NO API keys.
+    Uses CartoDB dark_matter tiles for sleek dark aesthetics.
     """
     # Center geographically over India with appropriate initial zoom
     india_center = [21.5, 78.5]
     m = folium.Map(
         location=india_center,
         zoom_start=5,
-        tiles="OpenStreetMap",  # 100% Free, NO API KEY, full city & state names visible
+        tiles="CartoDB dark_matter",
         control_scale=True,
     )
 
@@ -65,45 +65,26 @@ def create_india_air_map(df_latest: pd.DataFrame) -> folium.Map:
         if isinstance(safe_aqi, int):
             radius = max(14, min(28, int(safe_aqi / 14) + 12))
 
-        # Permanent badge tooltip visible at all times (perfect for teachers & non-tech users)
-        badge_html = f"""
-        <div style="
-            font-family: 'Segoe UI', Inter, sans-serif;
-            font-weight: 700;
-            font-size: 12px;
-            background: #0F172A;
-            color: #FFFFFF;
-            padding: 3px 8px;
-            border-radius: 6px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-            white-space: nowrap;
-            border-left: 4px solid {category['color']};
-        ">
-            {city_name}: <span style="color: {category['color']};">{safe_aqi} AQI</span>
-            <span style="font-weight:600; font-size:10px; opacity:0.9;"> · {freshness_label}</span>
-        </div>
-        """
-
-        # Rich click popup
+        # Rich dark-styled click popup
         popup_html = f"""
-        <div style="font-family: 'Segoe UI', Inter, sans-serif; width: 220px; padding: 4px;">
-            <div style="font-size: 16px; font-weight: 800; color: #0F172A; border-bottom: 2px solid {category['color']}; padding-bottom: 4px; margin-bottom: 8px;">
+        <div style="font-family: 'Segoe UI', Inter, sans-serif; width: 230px; padding: 6px; background: #0F172A; color: #F8FAFC; border-radius: 8px;">
+            <div style="font-size: 15px; font-weight: 800; color: #F8FAFC; border-bottom: 2px solid {category['color']}; padding-bottom: 4px; margin-bottom: 8px;">
                 📍 {city_name}
             </div>
             <div style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 8px;">
-                <span style="font-size: 28px; font-weight: 800; color: {category['color']};">{safe_aqi}</span>
-                <span style="font-size: 11px; font-weight: 700; background-color: {category['bg_color']}; color: {category['text_color']}; padding: 3px 8px; border-radius: 9999px;">
+                <span style="font-size: 26px; font-weight: 800; color: {category['color']};">{safe_aqi} <span style="font-size:12px;color:#94A3B8;">AQI</span></span>
+                <span style="font-size: 11px; font-weight: 700; background: {category['color']}22; color: {category['color']}; border: 1px solid {category['color']}66; padding: 2px 8px; border-radius: 9999px;">
                     {category['label'].upper()}
                 </span>
             </div>
-            <div style="font-size: 12px; color: #334155; line-height: 1.6; background-color: #F8FAFC; padding: 8px 10px; border-radius: 8px; border: 1px solid #E2E8F0;">
+            <div style="font-size: 11.5px; color: #CBD5E1; line-height: 1.6; background: rgba(30,41,59,0.7); padding: 8px 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.06);">
                 • <b>Key Pollutant:</b> {prom}<br>
                 • <b>PM2.5:</b> {safe_pm25} µg/m³<br>
                 • <b>PM10:</b> {safe_pm10} µg/m³<br>
                 • <b>Source:</b> {source}<br>
                 • <b>Freshness:</b> {freshness_label}
             </div>
-            <div style="font-size: 11px; color: {category['text_color']}; background: {category['bg_color']}; padding: 6px 8px; border-radius: 6px; margin-top: 8px; line-height: 1.4;">
+            <div style="font-size: 11px; color: #E2E8F0; background: rgba(15,23,42,0.85); border-left: 3px solid {category['color']}; padding: 6px 8px; border-radius: 4px; margin-top: 8px; line-height: 1.4;">
                 <b>Advisory:</b> {category['advisory']}
             </div>
         </div>
@@ -119,21 +100,21 @@ def create_india_air_map(df_latest: pd.DataFrame) -> folium.Map:
             fill_opacity=0.20,
         ).add_to(m)
 
-        # Core circle marker with permanent label
+        # Core circle marker
         marker = folium.CircleMarker(
             location=[lat, lon],
             radius=radius,
             color="#FFFFFF",
-            weight=2.5,
+            weight=2.0,
             fill=True,
             fill_color=category["color"],
             fill_opacity=0.90,
-            popup=folium.Popup(popup_html, max_width=280),
+            popup=folium.Popup(popup_html, max_width=270),
         )
         
-        # Add permanent tooltip so city name & AQI are visible immediately without clicking
+        # Hover tooltip (non-permanent to avoid overlapping clutter)
         marker.add_child(
-            folium.Tooltip(badge_html, permanent=True, direction="top", opacity=0.95)
+            folium.Tooltip(f"<b>{city_name}</b>: {safe_aqi} AQI ({category['label']})", sticky=True)
         )
         marker.add_to(m)
 

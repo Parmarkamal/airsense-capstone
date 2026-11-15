@@ -286,6 +286,16 @@ def run_all_checks(
 
 # ── Streamlit rendering ───────────────────────────────────────────────────────
 
+import streamlit as st
+
+
+@st.cache_data(ttl=10)
+def _cached_run_all_checks(_engine: Any = None) -> tuple[list[HealthStatus], float]:
+    """Run all checks and record timestamp, cached for 10 seconds."""
+    statuses = run_all_checks(engine=_engine)
+    return statuses, time.time()
+
+
 def render_pipeline_health_tab(engine: Any = None) -> None:
     """
     Render the full 🩺 Pipeline Health tab in Streamlit.
@@ -296,17 +306,19 @@ def render_pipeline_health_tab(engine: Any = None) -> None:
       - Architecture reference card
       - Viva defense Q&A accordion
     """
-    import streamlit as st
-
     st.subheader("🩺 Real-Time Pipeline Health Monitor")
     st.markdown(
         "Live diagnostic status of all AirSense infrastructure components. "
         "All checks run on every dashboard render — no manual refresh needed."
     )
 
-    # ── Run all checks ────────────────────────────────────────────────────────
+    # ── Run all checks (cached for 10s to prevent rapid socket spam) ──────────
     with st.spinner("Running service health checks…"):
-        statuses = run_all_checks(engine=engine)
+        statuses, check_timestamp = _cached_run_all_checks(_engine=engine)
+    
+    elapsed_sec = max(0, int(time.time() - check_timestamp))
+    time_ago_str = "just now" if elapsed_sec < 2 else f"{elapsed_sec}s ago"
+    st.caption(f"⏱️ Diagnostic telemetry cached (10s TTL) · Checked: **{time_ago_str}**")
 
     overall_ok = all(s.ok for s in statuses)
     if overall_ok:
@@ -321,12 +333,12 @@ def render_pipeline_health_tab(engine: Any = None) -> None:
     cols = st.columns(len(statuses))
     for col, status in zip(cols, statuses):
         with col:
-            color = "#16A34A" if status.ok else "#DC2626"
-            bg = "#F0FDF4" if status.ok else "#FEF2F2"
-            border = "#86EFAC" if status.ok else "#FECACA"
+            color = "#10B981" if status.ok else "#EF4444"
+            bg = "rgba(16, 185, 129, 0.10)" if status.ok else "rgba(239, 68, 68, 0.10)"
+            border = "rgba(16, 185, 129, 0.35)" if status.ok else "rgba(239, 68, 68, 0.35)"
 
             latency_text = (
-                f"<div style='font-size:11px;color:#64748B;margin-top:4px;'>"
+                f"<div style='font-size:11px;color:#94A3B8;margin-top:4px;'>"
                 f"Latency: {status.latency_ms:.0f} ms</div>"
                 if status.latency_ms is not None
                 else ""
@@ -336,7 +348,7 @@ def render_pipeline_health_tab(engine: Any = None) -> None:
                 f"""
                 <div style='background:{bg}; border:1px solid {border};
                             border-radius:12px; padding:16px 14px; text-align:center;'>
-                    <div style='font-weight:700; font-size:13px; color:#1E293B;
+                    <div style='font-weight:700; font-size:13px; color:#F8FAFC;
                                 margin-bottom:8px;'>{status.service}</div>
                     <div style='font-size:22px; font-weight:800; color:{color};'>
                         {status.badge}

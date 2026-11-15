@@ -70,14 +70,14 @@ CPCB_BREAKPOINTS: Final[dict[str, list[tuple[float, float, int, int]]]] = {
     ],
 }
 
-# Standard CPCB Categories and associated color palette
+# Standard CPCB Categories and associated color palette (dark-UI CPCB hue family)
 CPCB_CATEGORIES: Final[list[tuple[int, int, str, str]]] = [
-    (0, 50, "Good", "#00E400"),
-    (51, 100, "Satisfactory", "#92D050"),
-    (101, 200, "Moderate", "#FFFF00"),
-    (201, 300, "Poor", "#FF7E00"),
-    (301, 400, "Very Poor", "#FF0000"),
-    (401, 500, "Severe", "#7E0023"),
+    (0, 50, "Good", "#059669"),        # Dark emerald green
+    (51, 100, "Satisfactory", "#65A30D"),  # Olive green
+    (101, 200, "Moderate", "#D97706"),  # Amber
+    (201, 300, "Poor", "#EA580C"),      # Orange-red
+    (301, 400, "Very Poor", "#DC2626"), # Red
+    (401, 500, "Severe", "#7F1D1D"),    # Deep maroon
 ]
 
 # US EPA (2024 revised) PM2.5 Breakpoints: (B_LO, B_HI, I_LO, I_HI, category, color)

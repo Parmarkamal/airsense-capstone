@@ -191,29 +191,44 @@ def render_ai_advisor_view(df_latest: pd.DataFrame | None = None) -> None:
     
     st.markdown("---")
     
-    # ── Custom Chat Form ───────────────────────────────────────────────────────
-    st.markdown("#### 💬 Ask Your Own Question")
-    
-    with st.form("custom_chat_form", clear_on_submit=True):
-        user_input_text = st.text_input(
-            "Type your air quality or health question (Press Enter to submit):",
-            placeholder="e.g. Is it safe for an asthma patient to jog in Ahmedabad today?",
-            key="advisor_custom_input",
+    # ── Conversation Stream (Chronological Oldest-to-Newest) ─────────────────
+    conv_col1, conv_col2 = st.columns([4, 1])
+    with conv_col1:
+        st.markdown("#### 💬 Conversation")
+    with conv_col2:
+        if st.session_state.chat_history:
+            if st.button("🗑️ Clear Chat", key="clear_chat_btn", use_container_width=True):
+                st.session_state.chat_history = []
+                st.rerun()
+
+    if st.session_state.chat_history:
+        for msg in st.session_state.chat_history:  # Oldest to newest
+            if msg["role"] == "user":
+                with st.chat_message("user", avatar="🙋"):
+                    st.markdown(f"**You:** {msg['content']}")
+            elif msg["role"] == "assistant":
+                with st.chat_message("assistant", avatar="🤖"):
+                    model = msg.get("model", "ollama")
+                    chunks = msg.get("chunks", 0)
+                    st.caption(f"🤖 Engine: `{model}` · 📚 {chunks} reference chunks")
+                    st.markdown(msg["content"])
+                    sources = msg.get("sources", [])
+                    if sources:
+                        with st.expander(f"📚 {len(sources)} Verified Guidelines & Sources", expanded=False):
+                            for s in sources:
+                                st.markdown(f"- `{s}`")
+    else:
+        st.info(
+            "👆 Click one of the **Persona Pills** or **Quick Questions** above, "
+            "or type your question below. The AI answers using verified WHO and CPCB standards."
         )
-        send_col, clear_col = st.columns([3, 1])
-        with send_col:
-            ask_submitted = st.form_submit_button("🔍 Ask AI Health Advisor", use_container_width=True, type="primary")
-        with clear_col:
-            clear_submitted = st.form_submit_button("🗑️ Clear Chat", use_container_width=True)
-    
-    if clear_submitted:
-        st.session_state.chat_history = []
-        st.rerun()
-    
-    if ask_submitted and user_input_text.strip():
-        active_query = user_input_text.strip()
-    
-    # ── Execute Query (Instant Handler for Quick Buttons, Pills & Typed Inputs) ─
+
+    # ── Chat Input at bottom ──────────────────────────────────────────────────
+    user_chat_input = st.chat_input("Ask an air quality or health question (e.g. Is it safe for an asthma patient to jog in Ahmedabad today?)...")
+    if user_chat_input and user_chat_input.strip():
+        active_query = user_chat_input.strip()
+
+    # ── Execute Query (Instant Handler for Quick Buttons, Pills & Chat Input) ──
     if active_query:
         live_context = _format_live_aqi_context(df_latest)
 
@@ -254,31 +269,6 @@ def render_ai_advisor_view(df_latest: pd.DataFrame | None = None) -> None:
             "low_confidence": result.get("low_confidence", False),
         })
         st.rerun()
-    
-    # ── Display Chat History ───────────────────────────────────────────────────
-    if st.session_state.chat_history:
-        st.markdown("#### 📜 Conversation")
-        
-        for msg in reversed(st.session_state.chat_history):  # Most recent first
-            if msg["role"] == "user":
-                with st.chat_message("user", avatar="🙋"):
-                    st.markdown(f"**You:** {msg['content']}")
-            
-            elif msg["role"] == "assistant":
-                with st.chat_message("assistant", avatar="🤖"):
-                    model = msg.get("model", "ollama")
-                    chunks = msg.get("chunks", 0)
-                    st.caption(f"🤖 Engine: `{model}` · 📚 {chunks} reference chunks")
-                    st.markdown(msg["content"])
-                    if msg.get("sources"):
-                        sources_str = " · ".join([f"`{s}`" for s in msg["sources"]])
-                        st.markdown(f"**Official Sources:** {sources_str}")
-    else:
-        # Empty state guidance
-        st.info(
-            "👆 Click one of the **Quick Questions** above or type your own question to get started. "
-            "The AI will answer using official WHO and CPCB health guidelines."
-        )
     
     # ── Knowledge Base Info ────────────────────────────────────────────────────
     with st.expander("📚 About the Knowledge Base", expanded=False):
