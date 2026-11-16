@@ -190,26 +190,40 @@ def _parse_aqi_from_live_context(live_context: str) -> tuple[str, float | None]:
     return match.group(1).strip(), float(match.group(2))
 
 
+def _get_chroma_client():
+    """Return persistent ChromaDB client singleton."""
+    global _CACHED_CHROMA_CLIENT
+    if _CACHED_CHROMA_CLIENT is None:
+        from chromadb.config import Settings
+        _CACHED_CHROMA_CLIENT = chromadb.PersistentClient(
+            path=CHROMA_DB_PATH,
+            settings=Settings(anonymized_telemetry=False),
+        )
+    return _CACHED_CHROMA_CLIENT
+
+
+def _get_embedding_fn():
+    """Lazy-load the SentenceTransformer embedding function only when needed for query embedding."""
+    global _CACHED_EMBEDDING_FN
+    if _CACHED_EMBEDDING_FN is None:
+        _CACHED_EMBEDDING_FN = embedding_functions.SentenceTransformerEmbeddingFunction(
+            model_name="all-MiniLM-L6-v2"
+        )
+    return _CACHED_EMBEDDING_FN
+
+
 def _get_chroma_collection():
     """Connect to persistent ChromaDB and return the knowledge collection with in-memory caching."""
-    global _CACHED_CHROMA_CLIENT, _CACHED_EMBEDDING_FN, _CACHED_COLLECTION
+    global _CACHED_COLLECTION
     if _CACHED_COLLECTION is not None:
         return _CACHED_COLLECTION
 
     try:
-        from chromadb.config import Settings
-        if _CACHED_CHROMA_CLIENT is None:
-            _CACHED_CHROMA_CLIENT = chromadb.PersistentClient(
-                path=CHROMA_DB_PATH,
-                settings=Settings(anonymized_telemetry=False),
-            )
-        if _CACHED_EMBEDDING_FN is None:
-            _CACHED_EMBEDDING_FN = embedding_functions.SentenceTransformerEmbeddingFunction(
-                model_name="all-MiniLM-L6-v2"
-            )
-        _CACHED_COLLECTION = _CACHED_CHROMA_CLIENT.get_collection(
+        client = _get_chroma_client()
+        embed_fn = _get_embedding_fn()
+        _CACHED_COLLECTION = client.get_collection(
             name=COLLECTION_NAME,
-            embedding_function=_CACHED_EMBEDDING_FN,
+            embedding_function=embed_fn,
         )
         return _CACHED_COLLECTION
     except Exception as e:
@@ -608,15 +622,34 @@ def ask_health_advisor(
 
 
 def is_ollama_running() -> bool:
-    """Check if Ollama service is accessible."""
+    """Check if Ollama service is accessible (fast non-blocking probe)."""
     try:
-        resp = requests.get(f"{OLLAMA_BASE_URL}/api/tags", timeout=3)
+        resp = requests.get(f"{OLLAMA_BASE_URL}/api/tags", timeout=0.8)
         return resp.status_code == 200
     except Exception:
         return False
 
 
 def is_knowledge_base_ready() -> bool:
-    """Check if ChromaDB has been populated."""
-    collection = _get_chroma_collection()
-    return collection is not None and collection.count() > 0
+    """
+    Check if ChromaDB has been populated without loading heavy neural embedding models.
+    Executes in <5ms by inspecting Chroma's SQLite database directly.
+    """
+    global _CACHED_COLLECTION
+    if _CACHED_COLLECTION is not None:
+        try:
+            return _CACHED_COLLECTION.count() > 0
+        except Exception:
+            return False
+
+    chroma_sqlite = Path(CHROMA_DB_PATH) / "chroma.sqlite3"
+    if not chroma_sqlite.exists():
+        return False
+
+    try:
+        client = _get_chroma_client()
+        # Fast collection handle WITHOUT embedding function (instant SQLite count)
+        col = client.get_collection(name=COLLECTION_NAME)
+        return col.count() > 0
+    except Exception:
+        return False

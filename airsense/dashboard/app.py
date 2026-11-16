@@ -338,7 +338,7 @@ def _fetch_open_meteo_current_weather(lat: float, lon: float) -> tuple[float, in
             "&current=temperature_2m,relative_humidity_2m,wind_speed_10m"
         )
         req = _urllib_req.Request(url, headers={"User-Agent": "AirSense/1.0"})
-        with _urllib_req.urlopen(req, timeout=4.0) as resp:
+        with _urllib_req.urlopen(req, timeout=1.5) as resp:
             data = _json.loads(resp.read().decode())
             curr = data.get("current", {})
             t = round(float(curr["temperature_2m"]), 1)
@@ -398,22 +398,10 @@ def main():
             elif selected_view == "🤖 AI Health Advisor":
                 st.caption("⏸️ Auto-refresh paused on AI Advisor tab to ensure smooth conversation.")
 
-        col_btn1, col_btn2 = st.columns(2)
-        with col_btn1:
-            if st.button("🔄 Refresh", use_container_width=True):
-                st.cache_data.clear()
-                st.rerun()
-        with col_btn2:
-            if st.button("⚡ Live Sync", use_container_width=True, help="Trigger live API fetch, auto-heal voids, and update ML forecasts"):
-                with st.spinner("Fetching live telemetry & updating forecasts..."):
-                    try:
-                        from ingestion.fetch_aqi import run_fetch
-                        run_fetch()
-                        st.cache_data.clear()
-                        st.toast("✅ Live telemetry ingested & forecasts updated!", icon="🚀")
-                        st.rerun()
-                    except Exception as sync_err:
-                        st.error(f"Sync error: {sync_err}")
+        if st.button("🔄 Refresh Dashboard", use_container_width=True, help="Instantly reload latest telemetry from TimescaleDB"):
+            st.cache_data.clear()
+            st.rerun()
+        st.caption("💡 Background pipeline runs continuously via Kafka & batch scripts.")
 
         st.markdown("---")
         

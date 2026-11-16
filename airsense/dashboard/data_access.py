@@ -130,7 +130,7 @@ def get_provenance_badge(row: pd.Series | dict[str, Any]) -> dict[str, str]:
         }
 
 
-@st.cache_data(ttl=15)
+@st.cache_data(ttl=60)
 def get_latest_readings_all_cities(_engine: Engine) -> pd.DataFrame:
     """
     Fetch the most recent reading for each city from the aqi_readings hypertable.
@@ -216,7 +216,7 @@ def get_latest_readings_all_cities(_engine: Engine) -> pd.DataFrame:
         return pd.DataFrame()
 
 
-@st.cache_data(ttl=15)
+@st.cache_data(ttl=60)
 def get_city_rolling_cpcb_aqi(_engine: Engine, city_slug: str) -> dict[str, Any]:
     """
     Compute official 24-hour rolling CPCB NAQI for a city following CPCB 2014 guidelines:
@@ -286,7 +286,7 @@ def get_city_rolling_cpcb_aqi(_engine: Engine, city_slug: str) -> dict[str, Any]
         }
 
 
-@st.cache_data(ttl=15)
+@st.cache_data(ttl=60)
 def get_city_history(_engine: Engine, city_slug: str, limit: int = 48) -> pd.DataFrame:
     """
     Fetch recent chronological readings for a specific city.
@@ -335,7 +335,7 @@ def get_city_history(_engine: Engine, city_slug: str, limit: int = 48) -> pd.Dat
         return pd.DataFrame()
 
 
-@st.cache_data(ttl=15)
+@st.cache_data(ttl=60)
 def get_pipeline_stats(_engine: Engine) -> dict[str, Any]:
     """
     Return operational counts: total readings, error count, and last ingested event time.
